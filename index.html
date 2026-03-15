@@ -391,6 +391,37 @@ html,body{background:var(--bg);color:var(--t1);font-family:var(--s);min-height:1
 .tl-tr{display:flex;align-items:center;gap:8px;padding:6px 20px 6px 58px;font-size:11px;color:var(--t3);letter-spacing:.04em;text-transform:uppercase;position:relative}
 .tl-tr-ic{width:13px;height:13px;border-radius:50%;background:var(--card);border:1.5px solid var(--bdr);font-size:7px;display:flex;align-items:center;justify-content:center;position:absolute;left:25px}
 
+/* plan version tabs */
+.plan-tabs{display:flex;gap:8px;margin-top:18px;margin-bottom:4px;flex-wrap:wrap}
+.plan-tab{
+  padding:8px 18px;border-radius:30px;font-family:var(--s);font-size:13px;font-weight:700;
+  border:1.5px solid var(--bdr);background:transparent;color:var(--t2);
+  cursor:pointer;transition:all .15s;
+}
+.plan-tab:hover{border-color:var(--pk);color:var(--pk2)}
+.plan-tab.active{background:var(--pk);border-color:var(--pk);color:#fff;box-shadow:0 0 14px rgba(255,31,142,.3)}
+
+/* inline detail accordion on timeline cards */
+.tl-detail-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:8px 0 2px;cursor:pointer;user-select:none;
+  border-top:1px solid rgba(255,31,142,.1);margin-top:8px;
+}
+.tl-detail-lbl{font-size:12px;font-weight:600;color:var(--t3);display:flex;align-items:center;gap:6px}
+.tl-detail-arr{font-size:11px;color:var(--t3);transition:transform .25s}
+.tl-detail-arr.open{transform:rotate(180deg)}
+.tl-detail-body{overflow:hidden;max-height:0;transition:max-height .32s cubic-bezier(.4,0,.2,1)}
+.tl-detail-body.open{max-height:400px}
+.tl-detail-inner{padding:10px 0 4px}
+.tl-detail-rating{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.tl-detail-stars{color:var(--pk2);font-size:14px;letter-spacing:1px}
+.tl-detail-score{font-family:var(--f);font-size:16px;font-weight:700}
+.tl-detail-count{font-size:11px;color:var(--t3)}
+.tl-detail-desc{font-size:12px;font-weight:300;color:var(--t2);line-height:1.7;margin-bottom:8px}
+.tl-detail-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px}
+.tl-detail-tag{font-size:11px;padding:3px 9px;border-radius:20px;background:rgba(255,31,142,.08);color:var(--pk2);border:1px solid rgba(255,31,142,.15)}
+.tl-detail-hours{font-size:11px;color:var(--t3);margin-bottom:6px}
+
 .re-acts{padding:18px 24px 10px;display:flex;flex-direction:column;gap:10px}
 .re-btn{width:100%;padding:16px 22px;border:none;border-radius:var(--r2);cursor:pointer;font-family:var(--f);font-size:16px;font-weight:700;font-style:italic;display:flex;align-items:center;justify-content:space-between;transition:all .2s}
 .re-btn.primary{background:var(--pk);color:#fff;box-shadow:0 0 28px rgba(255,31,142,.26)}
@@ -629,8 +660,11 @@ html,body{background:var(--bg);color:var(--t1);font-family:var(--s);min-height:1
   <div class="re-head">
     <div class="re-glow"></div>
     <div class="re-tag">行程规划完成</div>
-    <div class="re-h2" id="reH2">你的<br><em>今日行程</em></div>
+    <div class="re-h2">你的<br><em>今日行程</em></div>
     <div class="re-date" id="reDate"></div>
+    <!-- plan tabs -->
+    <div class="plan-tabs" id="planTabs"></div>
+    <!-- summary metrics for active plan -->
     <div class="re-mets" id="reMets"></div>
   </div>
   <div class="tl" id="tlBody"></div>
@@ -815,7 +849,7 @@ async function doSubmit(){
   const dStr=date?new Date(date+'T12:00').toLocaleDateString('zh-CN',{year:'numeric',month:'long',day:'numeric',weekday:'long'}):'近期';
   const evStr=evs.map((ev,i)=>{const d=getEv(ev.id);return `活动${i+1}：${d.name}，地点：${d.loc}，时间：${d.start}～${d.end}`;}).join('\n');
 
-  const prompt=`你是中国城市行程规划助手。城市：${city}，出发/终点：${home}，日期：${dStr}，出行：${tStr}，人数：${pLabel}，预算：${bLabel}。\n已确定活动：\n${evStr}\n空档偏好：${pStr}，最短空档：${sGap}。\n\n分析各活动间空档，根据顺路原则推荐2-4个真实存在的填充地点（提供${city}具体地址）。\n\n只输出JSON，格式如下：\n{"title":"5字内标题","summary":{"totalTime":"X小时","totalDist":"约X公里","perPerson":"约X元"},"date":"${dStr}","timeline":[{"type":"home","name":"出发","address":"${home}","time":"HH:MM","tags":[],"rating":null,"duration":"","reason":""},{"type":"transit","mode":"地铁/公交","modeIcon":"🚇","duration":"约X分钟"},{"type":"fixed","name":"活动名","address":"具体地址","time":"HH:MM–HH:MM","tags":["已确定"],"rating":null,"duration":"X小时","reason":""},{"type":"transit","mode":"步行","modeIcon":"🚶","duration":"约X分钟"},{"type":"gap","name":"推荐地点","address":"具体地址","time":"HH:MM–HH:MM","tags":["推荐"],"rating":4.7,"duration":"约X分钟","reason":"推荐理由"},{"type":"home","name":"回家","address":"${home}","time":"HH:MM","tags":[],"rating":null,"duration":"","reason":""}]}`;
+  const prompt=`你是中国城市行程规划助手。城市：${city}，出发/终点：${home}，日期：${dStr}，出行：${tStr}，人数：${pLabel}，预算：${bLabel}。\n已确定活动：\n${evStr}\n空档偏好：${pStr}，最短空档：${sGap}。\n\n请生成3个不同风格的行程方案（方案A偏休闲放松，方案B偏探店打卡，方案C偏高效紧凑），每个方案分析空档并推荐2-4个真实存在的填充地点（提供${city}具体地址）。\n\n只输出JSON：\n{"date":"${dStr}","plans":[{"id":"A","label":"方案A · 休闲放松","title":"5字内标题","summary":{"totalTime":"X小时","totalDist":"约X公里","perPerson":"约X元"},"timeline":[{"type":"home","name":"出发","address":"${home}","time":"HH:MM","tags":[],"rating":null,"ratingCount":null,"desc":"","hours":"","featureTags":[],"duration":"","reason":""},{"type":"transit","mode":"地铁/公交","modeIcon":"🚇","duration":"约X分钟"},{"type":"fixed","name":"活动名","address":"具体地址","time":"HH:MM–HH:MM","tags":["已确定"],"rating":null,"ratingCount":null,"desc":"","hours":"","featureTags":[],"duration":"X小时","reason":""},{"type":"transit","mode":"步行","modeIcon":"🚶","duration":"约X分钟"},{"type":"gap","name":"推荐地点","address":"具体地址","time":"HH:MM–HH:MM","tags":["推荐"],"rating":4.7,"ratingCount":"500+","desc":"一两句描述这个地方的特色和氛围","hours":"10:00-22:00","featureTags":["人均50元","适合拍照","安静"],"duration":"约X分钟","reason":"推荐理由"},{"type":"home","name":"回家","address":"${home}","time":"HH:MM","tags":[],"rating":null,"ratingCount":null,"desc":"","hours":"","featureTags":[],"duration":"","reason":""}]},{"id":"B","label":"方案B · 探店打卡","title":"5字内标题","summary":{"totalTime":"X小时","totalDist":"约X公里","perPerson":"约X元"},"timeline":[]},{"id":"C","label":"方案C · 高效紧凑","title":"5字内标题","summary":{"totalTime":"X小时","totalDist":"约X公里","perPerson":"约X元"},"timeline":[]}]}`;
 
   btn.disabled=true;
   document.getElementById('ld').classList.add('show');
@@ -823,12 +857,10 @@ async function doSubmit(){
   try{
     const resp=await fetch(API_PROXY,{
       method:'POST',
-      headers:{
-        'Content-Type':'application/json',
-      },
+      headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
         model:'deepseek/deepseek-chat',
-        max_tokens:2000,
+        max_tokens:4000,
         response_format:{type:'json_object'},
         messages:[
           {role:'system',content:'你是行程规划助手，只输出JSON，不输出任何其他内容。'},
@@ -847,38 +879,66 @@ async function doSubmit(){
 
     const data=await resp.json();
     const raw=data.choices?.[0]?.message?.content||'';
-    // Extract JSON object robustly — handles cases where model wraps JSON in text
     const jsonMatch=raw.match(/\{[\s\S]*\}/);
     if(!jsonMatch) throw new Error('AI 返回格式异常，请重试');
-    const plan=JSON.parse(jsonMatch[0]);
-    if(!plan.timeline||!Array.isArray(plan.timeline)) throw new Error('行程数据不完整，请重试');
-    renderResult(plan);
+    const result=JSON.parse(jsonMatch[0]);
+    if(!result.plans||!Array.isArray(result.plans)||!result.plans.length) throw new Error('行程数据不完整，请重试');
+    renderPlans(result);
 
   }catch(err){
     document.getElementById('ld').classList.remove('show');
     btn.disabled=false;
     let msg=err.message||'未知错误';
-    // TypeError: Failed to fetch = 网络问题或CORS
     if(err instanceof TypeError||msg.includes('fetch')){
-      msg='网络请求失败，请检查：1) 网络连接是否正常 2) API Key 是否已填写';
+      msg='网络请求失败，请检查网络连接';
     }
     showErr('err3', msg);
     console.error('[今日满排] 规划错误:', err);
   }
 }
 
-// ── RENDER ──
-function renderResult(plan){
+// ── RENDER PLANS ──
+let allPlans=[];
+let activePlan=0;
+
+function renderPlans(result){
   document.getElementById('ld').classList.remove('show');
   document.getElementById('submitBtn').disabled=false;
+  allPlans=result.plans||[];
+  document.getElementById('reDate').textContent=result.date||'';
+  // render tabs
+  document.getElementById('planTabs').innerHTML=allPlans.map((p,i)=>
+    `<button class="plan-tab${i===0?' active':''}" onclick="switchPlan(${i})">${p.label||'方案'+(i+1)}</button>`
+  ).join('');
+  activePlan=0;
+  renderTimeline(allPlans[0]);
+  goPage('pg-result');
+}
+
+function switchPlan(idx){
+  activePlan=idx;
+  document.querySelectorAll('.plan-tab').forEach((t,i)=>t.classList.toggle('active',i===idx));
+  renderTimeline(allPlans[idx]);
+  document.getElementById('tlBody').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function togDetail(id){
+  const body=document.getElementById('dd-'+id);
+  const arr=document.getElementById('da-'+id);
+  if(!body) return;
+  const open=body.classList.toggle('open');
+  if(arr) arr.classList.toggle('open',open);
+}
+
+function renderTimeline(plan){
+  if(!plan) return;
   const s=plan.summary||{};
-  document.getElementById('reH2').innerHTML=`你的<br><em>${plan.title||'今日行程'}</em>`;
-  document.getElementById('reDate').textContent=plan.date||'';
   document.getElementById('reMets').innerHTML=`
     <div class="r-m"><span class="r-mv">${s.totalTime||'--'}</span><span class="r-ml">总时长</span></div>
     <div class="r-m"><span class="r-mv">${s.totalDist||'--'}</span><span class="r-ml">总距离</span></div>
     <div class="r-m"><span class="r-mv">${s.perPerson||'--'}</span><span class="r-ml">人均花费</span></div>`;
   let html='';
+  let detailIdx=0;
   (plan.timeline||[]).forEach((item,i,arr)=>{
     if(item.type==='transit'){
       html+=`<div class="tl-tr"><div class="tl-tr-ic">${item.modeIcon||'🚇'}</div>${item.mode} · ${item.duration}</div>`;
@@ -887,10 +947,42 @@ function renderResult(plan){
     const isLast=i===arr.length-1;
     const dc=item.type==='gap'?'d-gap':item.type==='home'?'d-home':'d-fixed';
     const cc=item.type==='gap'?'cg':item.type==='fixed'?'cf':'';
-    const mu=`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((item.name||'')+(item.address?' '+item.address:''))}`;
-    const du=`https://www.dianping.com/search/keyword/2/10_${encodeURIComponent(item.name||'')}`;
     const tags=(item.tags||[]).map(t=>`<span class="tl-tag ${t==='已确定'?'tt-f':t==='推荐'?'tt-g':'tt-c'}">${t}</span>`).join('');
-    const acts=item.type!=='home'?`<div class="tl-acts"><a class="tl-act a-map" href="${mu}" target="_blank">🗺 导航</a><a class="tl-act a-dp" href="${du}" target="_blank">📍 点评</a></div>`:'';
+
+    // 高德地图导航链接
+    const amapUrl=`https://uri.amap.com/search?keyword=${encodeURIComponent(item.name||''+(item.address?' '+item.address:''))}&city=${encodeURIComponent('')}&src=jinri-manpai&coordinate=gaode&callnative=1`;
+
+    // inline detail accordion — only for gap (recommended) items
+    let detailHtml='';
+    if(item.type==='gap'){
+      const did=`${activePlan}_${detailIdx++}`;
+      // star display
+      const score=item.rating||0;
+      const fullStars=Math.floor(score);
+      const halfStar=score-fullStars>=0.5?'½':'';
+      const starStr='★'.repeat(fullStars)+(halfStar?'☆':'');
+      detailHtml=`
+        <div class="tl-detail-row" onclick="togDetail('${did}')">
+          <div class="tl-detail-lbl">📋 查看简介与评分</div>
+          <span class="tl-detail-arr" id="da-${did}">↓</span>
+        </div>
+        <div class="tl-detail-body" id="dd-${did}">
+          <div class="tl-detail-inner">
+            ${item.rating?`<div class="tl-detail-rating">
+              <span class="tl-detail-stars">${starStr}</span>
+              <span class="tl-detail-score">${item.rating}</span>
+              ${item.ratingCount?`<span class="tl-detail-count">${item.ratingCount}条评价</span>`:''}
+            </div>`:''}
+            ${item.desc?`<div class="tl-detail-desc">${item.desc}</div>`:''}
+            ${item.featureTags&&item.featureTags.length?`<div class="tl-detail-tags">${item.featureTags.map(t=>`<span class="tl-detail-tag">${t}</span>`).join('')}</div>`:''}
+            ${item.hours?`<div class="tl-detail-hours">⏰ 营业时间：${item.hours}</div>`:''}
+          </div>
+        </div>`;
+    }
+
+    const navBtn=item.type!=='home'?`<a class="tl-act a-map" href="${amapUrl}" target="_blank">🗺 高德导航</a>`:'';
+    const acts=item.type!=='home'?`<div class="tl-acts">${navBtn}</div>`:'';
+
     html+=`<div class="tl-item${isLast?' last':''}">
       <div class="tl-stem"></div>
       <div class="tl-dot ${dc}"></div>
@@ -898,19 +990,19 @@ function renderResult(plan){
         <div class="tl-top"><div class="tl-name">${item.name}</div><div class="tl-time">${item.time||''}</div></div>
         ${tags?`<div class="tl-tags">${tags}</div>`:''}
         ${item.address?`<div class="tl-addr">📍 ${item.address}</div>`:''}
-        ${item.rating?`<div class="tl-rating"><span class="tl-stars">★</span><span class="tl-rv">${item.rating}</span>${item.duration?`<span class="tl-dur"> · ${item.duration}</span>`:''}</div>`:''}
         ${item.reason?`<div class="tl-reason">${item.reason}</div>`:''}
         ${acts}
+        ${detailHtml}
       </div>
     </div>`;
   });
   document.getElementById('tlBody').innerHTML=html;
-  goPage('pg-result');
 }
 
 // ── COPY ──
 function copyRes(){
-  navigator.clipboard?.writeText(document.getElementById('tlBody').innerText).then(()=>{
+  const txt=document.getElementById('tlBody').innerText;
+  navigator.clipboard?.writeText(txt).then(()=>{
     const b=document.getElementById('copyBtn');
     b.textContent='已复制 ✓'; b.classList.add('copied');
     setTimeout(()=>{b.textContent='复制行程文字';b.classList.remove('copied');},2500);
