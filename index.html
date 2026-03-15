@@ -2,953 +2,728 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>今日满排 — 智能行程规划</title>
-<meta name="description" content="填入已确定的活动，AI 分析空档，按顺路原则推荐附近好去处">
-<meta name="theme-color" content="#F4622A">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700;1,900&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,700&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>今日满排</title>
+<meta name="theme-color" content="#FF1F8E">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700;1,900&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{
-  --o:#F4622A;--o2:#FF8547;--o3:#FFAB74;
-  --op:#FFF3EC;--op2:#FFFCF9;
-  --am:#F2A93B;--amp:#FFF8E8;
-  --ink:#1C1410;--ink2:#3D2B1F;
-  --mid:#8C6D5E;--mut:#C4A898;
-  --bdr:#EDE0D8;--paper:#FFFCFA;--wh:#FFFFFF;
-  --grn:#2A9D6B;--grnp:#EDFAF4;
-  --red:#D94040;--redp:#FEF0F0;
-  --f:'Playfair Display',Georgia,serif;
-  --s:'DM Sans',system-ui,sans-serif;
+  --pk:#FF1F8E;--pk2:#FF69B4;
+  --bg:#0D0D0D;--card:#1C1C1C;
+  --bdr:rgba(255,31,142,.2);
+  --t1:#FFFFFF;--t2:rgba(255,255,255,.6);--t3:rgba(255,255,255,.28);--t4:rgba(255,255,255,.12);
+  --f:'Playfair Display',Georgia,serif;--s:'DM Sans',system-ui,sans-serif;
+  --r:14px;--r2:20px;
 }
-html{background:var(--paper)}
-body{font-family:var(--s);color:var(--ink);min-height:100vh;overflow-x:hidden;padding-bottom:76px}
+html,body{background:var(--bg);color:var(--t1);font-family:var(--s)}
+.wrap{max-width:900px;margin:0 auto}
+.page{display:none}.page.active{display:block}
 
-/* ══ COVER ══ */
-.cover{min-height:100svh;background:var(--op2);display:flex;flex-direction:column;position:relative;overflow:hidden}
-.cv-top{display:flex;align-items:center;justify-content:space-between;padding:52px 28px 0;position:relative;z-index:3}
-.cv-label{font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--o3)}
-.cv-date{font-size:12px;font-weight:500;color:var(--mut)}
-.cv-body{flex:1;display:flex;flex-direction:column;justify-content:center;padding:32px 28px 0;position:relative;z-index:3}
-.cv-eye{display:flex;align-items:center;gap:10px;font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--o);margin-bottom:16px}
-.cv-eye::before{content:'';display:inline-block;width:24px;height:2px;background:var(--o)}
-.cv-h1{font-family:var(--f);font-size:clamp(50px,13vw,68px);font-weight:900;line-height:.88;color:var(--ink);letter-spacing:-.03em}
-.cv-h1 em{font-style:italic;color:var(--o)}
-.cv-tagline{margin-top:18px;font-size:13px;font-weight:300;color:var(--mid);line-height:1.75;max-width:280px;border-left:2px solid var(--o3);padding-left:14px}
-.cv-illus{position:relative;z-index:3;padding:0 20px;margin-top:16px;height:180px;flex-shrink:0}
-.cv-illus svg{width:100%;height:100%}
-.cv-cta{padding:0 28px 36px;position:relative;z-index:3;margin-top:auto}
-.cv-pills{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:18px}
-.cv-pill{padding:5px 12px;background:var(--wh);border:1px solid var(--bdr);border-radius:30px;font-size:11px;font-weight:500;color:var(--mid)}
-.cv-pill strong{color:var(--o);font-weight:700}
-.start-btn{width:100%;padding:19px 22px;background:var(--o);color:var(--wh);border:none;border-radius:12px;cursor:pointer;font-family:var(--f);font-size:18px;font-weight:700;font-style:italic;display:flex;align-items:center;justify-content:space-between;box-shadow:0 8px 28px rgba(244,98,42,.28);transition:all .22s}
-.start-btn:hover{background:var(--o2);transform:translateY(-2px)}
+/* COVER */
+.cv{background:var(--bg);display:flex;flex-direction:column;position:relative;padding-bottom:env(safe-area-inset-bottom)}
+.blob{position:absolute;border-radius:50%;pointer-events:none}
+.b1{width:420px;height:420px;background:var(--pk);top:-110px;right:-100px;opacity:.88}
+.b2{width:260px;height:260px;background:#FF69B4;bottom:70px;left:-80px;opacity:.6}
+.b3{width:110px;height:110px;background:var(--pk);bottom:260px;right:40px;opacity:.28}
 
-/* ══ PAGES ══ */
-.page{display:none;animation:pgIn .35s cubic-bezier(.22,1,.36,1) both}
-.page.active{display:block}
-@keyframes pgIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+/* hero section — full viewport */
+.cv-hero{min-height:100svh;display:flex;flex-direction:column;position:relative;z-index:2;overflow:hidden}
+.cv-top{display:flex;align-items:center;justify-content:space-between;padding:52px 28px 0}
+.cv-badge{font-size:10px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--pk2);border:1px solid var(--bdr);padding:5px 13px;border-radius:20px}
+.cv-dt{font-size:12px;color:var(--t3)}
+.cv-body{flex:1;padding:36px 28px 0}
+.cv-h1{font-family:var(--f);font-size:clamp(52px,13vw,80px);font-weight:900;line-height:.88;letter-spacing:-.03em}
+.cv-h1 em{font-style:italic;color:var(--pk)}
+.cv-sub{font-size:15px;font-weight:300;color:var(--t2);line-height:1.75;margin-top:20px;max-width:340px;border-left:2px solid var(--pk);padding-left:14px}
+.cv-scroll-hint{display:flex;align-items:center;gap:8px;padding:24px 28px;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);cursor:pointer;transition:color .2s}
+.cv-scroll-hint:hover{color:var(--pk2)}
+.cv-arrow-down{width:18px;height:18px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg);margin-top:-5px}
 
-/* ══ PAGE HEADER ══ */
-.pg-head{background:linear-gradient(150deg,var(--op) 0%,var(--op2) 100%);padding:52px 28px 0;position:relative;overflow:hidden;border-bottom:1px solid var(--bdr)}
-.ph-d1{position:absolute;width:160px;height:160px;border-radius:50%;background:rgba(244,98,42,.07);right:-30px;top:-30px;pointer-events:none}
-.ph-d2{position:absolute;width:100px;height:100px;border-radius:50%;background:rgba(242,169,59,.08);left:-20px;bottom:-30px;pointer-events:none}
-.pg-back{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--o);background:none;border:none;cursor:pointer;font-family:var(--s);margin-bottom:18px;padding:0;transition:opacity .15s}
-.pg-back:hover{opacity:.7}
-.pg-ey{font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--mut);margin-bottom:8px;display:flex;align-items:center;gap:7px}
-.pg-ey span{display:inline-block;width:14px;height:1.5px;background:var(--mut)}
-.pg-h2{font-family:var(--f);font-size:32px;font-weight:900;line-height:.95;color:var(--ink);letter-spacing:-.02em}
-.pg-h2 em{font-style:italic;color:var(--o)}
-.pg-rule{height:2.5px;background:var(--o);width:32px;margin-top:12px;border-radius:2px}
-.pg-num{position:absolute;right:14px;bottom:-10px;font-family:var(--f);font-size:100px;font-weight:900;font-style:italic;color:rgba(244,98,42,.05);line-height:1;pointer-events:none}
-/* step illustration strip */
-.pg-illus{height:110px;padding:0 28px;position:relative;z-index:2}
-.pg-illus svg{width:100%;height:100%}
+/* intro section */
+.cv-intro{padding:56px 28px;border-top:1px solid var(--bdr);position:relative;z-index:2}
+.cv-intro-tag{font-size:10px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--pk);display:flex;align-items:center;gap:10px;margin-bottom:20px}
+.cv-intro-tag::before{content:'';display:inline-block;width:20px;height:2px;background:var(--pk);border-radius:1px}
+.cv-intro-h{font-family:var(--f);font-size:clamp(26px,6vw,36px);font-weight:900;line-height:1.1;color:var(--t1);margin-bottom:16px}
+.cv-intro-h em{font-style:italic;color:var(--pk)}
+.cv-intro-p{font-size:14px;font-weight:300;color:var(--t2);line-height:1.85;max-width:500px}
 
-/* ══ PROGRESS ══ */
+/* scenario cards */
+.cv-scenarios{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:28px}
+@media(max-width:480px){.cv-scenarios{grid-template-columns:1fr}}
+.cv-scene{background:var(--card);border:1px solid var(--bdr);border-radius:var(--r2);padding:18px 16px;position:relative;overflow:hidden}
+.cv-scene::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--pk);opacity:.5}
+.cv-scene.active-scene::before{opacity:1}
+.cv-scene-ico{font-size:24px;margin-bottom:10px;display:block}
+.cv-scene-ttl{font-family:var(--f);font-size:15px;font-weight:700;color:var(--t1);margin-bottom:6px}
+.cv-scene-desc{font-size:12px;font-weight:300;color:var(--t3);line-height:1.6}
+
+/* how it works */
+.cv-how{padding:0 28px 56px;position:relative;z-index:2}
+.cv-how-tag{font-size:10px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--pk);display:flex;align-items:center;gap:10px;margin-bottom:20px}
+.cv-how-tag::before{content:'';display:inline-block;width:20px;height:2px;background:var(--pk);border-radius:1px}
+.cv-how-h{font-family:var(--f);font-size:clamp(24px,5vw,32px);font-weight:900;line-height:1.1;color:var(--t1);margin-bottom:24px}
+.cv-steps{display:flex;flex-direction:column;gap:0}
+.cv-step{display:flex;gap:16px;padding:20px 0;border-bottom:1px solid var(--bdr);position:relative}
+.cv-step:last-child{border-bottom:none}
+.cv-step-num{font-family:var(--f);font-size:36px;font-weight:900;color:var(--pk);opacity:.25;line-height:1;flex-shrink:0;width:44px;text-align:right}
+.cv-step-body{flex:1;padding-top:4px}
+.cv-step-ttl{font-size:15px;font-weight:700;color:var(--t1);margin-bottom:6px}
+.cv-step-desc{font-size:13px;font-weight:300;color:var(--t2);line-height:1.7}
+.cv-step-desc strong{font-weight:700;color:var(--pk2)}
+
+/* accordion */
+.acc{border-top:1px solid var(--bdr);position:relative;z-index:2}
+.acc-row{display:flex;align-items:center;justify-content:space-between;padding:18px 28px;cursor:pointer;user-select:none;transition:background .15s}
+.acc-row:hover{background:rgba(255,31,142,.04)}
+.acc-row:active{background:rgba(255,31,142,.07)}
+.acc-left{display:flex;align-items:center;gap:12px}
+.acc-ico{width:32px;height:32px;border-radius:10px;background:rgba(255,31,142,.1);border:1px solid var(--bdr);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.acc-label{font-size:14px;font-weight:700;color:var(--t1)}
+.acc-sub{font-size:11px;color:var(--t3);margin-top:1px}
+.acc-arr{font-size:13px;color:var(--t3);transition:transform .28s;flex-shrink:0}
+.acc-arr.open{transform:rotate(180deg)}
+.acc-body{overflow:hidden;max-height:0;transition:max-height .38s cubic-bezier(.4,0,.2,1)}
+.acc-body.open{max-height:2000px}
+.acc-inner{padding:0 28px 24px}
+
+/* CTA at bottom of landing */
+.cv-cta{padding:0 28px 52px;position:relative;z-index:2}
+.cv-cta-note{font-size:12px;color:var(--t3);text-align:center;margin-bottom:16px;font-style:italic}
+
+/* BUTTONS */
+.btn-go{display:flex;align-items:center;justify-content:space-between;width:100%;max-width:440px;padding:19px 24px;background:var(--pk);color:#fff;border:none;border-radius:var(--r2);cursor:pointer;font-family:var(--f);font-size:18px;font-weight:700;font-style:italic;box-shadow:0 0 56px rgba(255,31,142,.38);transition:all .22s}
+.btn-go:hover{background:#E0007A;transform:translateY(-2px)}
+.btn-next{display:flex;align-items:center;justify-content:space-between;width:100%;padding:18px 22px;background:var(--pk);color:#fff;border:none;border-radius:var(--r2);cursor:pointer;font-family:var(--f);font-size:17px;font-weight:700;font-style:italic;box-shadow:0 0 36px rgba(255,31,142,.28);transition:all .22s}
+.btn-next:hover{background:#E0007A;transform:translateY(-2px)}
+.btn-next:disabled{opacity:.35;cursor:not-allowed;transform:none;box-shadow:none}
+.prev-lnk{display:block;width:100%;text-align:center;margin-top:12px;font-size:12px;color:var(--t3);background:none;border:none;cursor:pointer;font-family:var(--s);transition:color .15s}
+.prev-lnk:hover{color:var(--pk2)}
+
+/* PAGE SHELL */
+.pg-shell{min-height:100svh;display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom)}
+.ph{padding:52px 28px 26px;border-bottom:1px solid var(--bdr);position:relative;overflow:hidden;flex-shrink:0}
+.ph-glow{position:absolute;width:180px;height:180px;border-radius:50%;background:var(--pk);right:-50px;top:-60px;opacity:.1;pointer-events:none}
+.ph-back{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--pk);background:none;border:none;cursor:pointer;font-family:var(--s);margin-bottom:16px;padding:0}
+.ph-ey{font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--t3);margin-bottom:8px;display:flex;align-items:center;gap:7px}
+.ph-ey i{display:inline-block;width:14px;height:1px;background:var(--t3)}
+.ph-h2{font-family:var(--f);font-size:clamp(28px,6vw,38px);font-weight:900;line-height:.95;letter-spacing:-.02em}
+.ph-h2 em{font-style:italic;color:var(--pk)}
+.ph-rule{height:3px;background:var(--pk);width:34px;margin-top:12px;border-radius:2px}
 .prog{display:flex;gap:5px;margin-bottom:18px}
-.prog-s{flex:1;height:3px;border-radius:3px;background:rgba(244,98,42,.15);transition:all .3s}
-.prog-s.done{background:var(--o)}
+.ps{flex:1;height:3px;border-radius:3px;background:rgba(255,31,142,.14)}
+.ps.done{background:var(--pk)}
+.pb{flex:1;padding:22px 28px;overflow-y:auto}
+.pf{padding:0 28px 28px;flex-shrink:0}
 
-/* ══ FORM ══ */
-.pg-body{padding:20px 28px}
+/* FIELDS */
 .field{margin-bottom:16px}
 .field:last-child{margin-bottom:0}
-.fl{display:block;font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--mid);margin-bottom:8px}
+.fl{display:block;font-size:10px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--t3);margin-bottom:8px}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:520px){.frow{grid-template-columns:1fr}}
+.time-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 
-/* ══ GOOGLE MAPS STYLE INPUTS ══ */
-.input-card{
-  display:flex;align-items:center;gap:12px;
-  background:var(--wh);
-  border:1.5px solid var(--bdr);
-  border-radius:14px;
-  padding:14px 16px;
-  box-shadow:0 2px 8px rgba(28,20,16,.06);
-  transition:border-color .2s,box-shadow .2s;
-  cursor:text;
-}
-.input-card:focus-within{
-  border-color:var(--o);
-  box-shadow:0 2px 8px rgba(28,20,16,.06),0 0 0 3px rgba(244,98,42,.10);
-}
-.input-card .ic{
-  width:36px;height:36px;border-radius:10px;
-  display:flex;align-items:center;justify-content:center;
-  font-size:18px;flex-shrink:0;
-}
-.ic-pin{background:#FDECEA;}
-.ic-cal{background:#E8F5E9;}
-.ic-city{background:#E3F2FD;}
-.input-card input{
-  flex:1;border:none;outline:none;
-  font-family:var(--s);font-size:15px;font-weight:500;
-  color:var(--ink);background:transparent;
-  padding:0;min-width:0;
-}
-.input-card input::placeholder{color:var(--mut);font-weight:400}
-.input-card input[type=date]{color:var(--ink)}
+/* INPUT CARD */
+.ic{display:flex;align-items:center;gap:11px;background:var(--card);border:1.5px solid var(--bdr);border-radius:var(--r);padding:12px 15px;transition:border-color .2s,box-shadow .2s}
+.ic:focus-within{border-color:var(--pk);box-shadow:0 0 0 3px rgba(255,31,142,.1)}
+.ic-ico{width:36px;height:36px;border-radius:9px;background:rgba(255,31,142,.1);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.ic input{flex:1;border:none;outline:none;background:transparent;font-family:var(--s);font-size:15px;font-weight:500;color:var(--t1);min-width:0;padding:0}
+.ic input::placeholder{color:var(--t3);font-weight:400}
+.ic input[type=date],.ic input[type=time]{color:var(--t1);-webkit-appearance:none;appearance:none;color-scheme:dark}
 
-/* standard selects keep existing style */
-input[type=date],input[type=time],input[type=password]{width:100%;padding:13px 15px;background:var(--wh);border:1.5px solid var(--bdr);border-radius:8px;font-family:var(--s);font-size:14px;font-weight:500;color:var(--ink);outline:none;-webkit-appearance:none;transition:border-color .2s,box-shadow .2s}
-input:focus{border-color:var(--o);box-shadow:0 0 0 3px rgba(244,98,42,.1)}
-input::placeholder{color:var(--mut)}
-.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.hint{font-size:12px;font-weight:300;font-style:italic;color:var(--mut);line-height:1.6;margin-top:8px}
+/* SELECT */
+.sw{position:relative}
+.sw select{width:100%;padding:13px 38px 13px 15px;background:var(--card);border:1.5px solid var(--bdr);border-radius:var(--r);font-family:var(--s);font-size:14px;font-weight:500;color:var(--t1);outline:none;-webkit-appearance:none;appearance:none;cursor:pointer;transition:border-color .2s}
+.sw select:focus{border-color:var(--pk)}
+.sw select option,.sw select optgroup{background:#1a1a1a;color:var(--t1)}
+.sw-a{position:absolute;right:14px;top:50%;transform:translateY(-50%);pointer-events:none;font-size:11px;color:var(--t3)}
 
-/* ══ SELECT DROPDOWN ══ */
-.sel-wrap{position:relative}
-.sel-wrap select{width:100%;padding:13px 40px 13px 15px;background:var(--wh);border:1.5px solid var(--bdr);border-radius:8px;font-family:var(--s);font-size:14px;font-weight:500;color:var(--ink);outline:none;-webkit-appearance:none;appearance:none;cursor:pointer;transition:border-color .2s,box-shadow .2s}
-.sel-wrap select:focus{border-color:var(--o);box-shadow:0 0 0 3px rgba(244,98,42,.1)}
-.sel-arrow{position:absolute;right:14px;top:50%;transform:translateY(-50%);pointer-events:none;font-size:11px;color:var(--mid)}
+/* PILLS */
+.pp-wrap{display:flex;flex-wrap:wrap;gap:8px}
+.pp{padding:9px 16px;border:1.5px solid var(--bdr);border-radius:30px;background:transparent;font-family:var(--s);font-size:13px;font-weight:500;color:var(--t2);cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:6px;user-select:none}
+.pp:hover{border-color:var(--pk);color:var(--pk2)}
+.pp.on{background:var(--pk);border-color:var(--pk);color:#fff;box-shadow:0 0 18px rgba(255,31,142,.28)}
 
-/* ══ PILL PICKER (people / budget) ══ */
-.pill-pick{display:flex;flex-wrap:wrap;gap:8px}
-.pp{padding:10px 16px;border:1.5px solid var(--bdr);border-radius:30px;background:var(--wh);font-family:var(--s);font-size:13px;font-weight:500;color:var(--mid);cursor:pointer;transition:all .16s;display:flex;align-items:center;gap:6px;user-select:none}
-.pp:hover{border-color:var(--o3);color:var(--o2)}
-.pp.on{background:var(--o);border-color:var(--o);color:var(--wh);box-shadow:0 3px 12px rgba(244,98,42,.22)}
-.pp .pi{font-size:15px}
+/* TIME GUIDANCE */
+.time-guide{font-size:11px;color:var(--t3);font-style:italic;margin-top:5px;padding-left:2px}
 
-/* ══ API KEY ══ */
-.key-box{background:var(--amp);border:1.5px solid #F2D9A0;border-radius:12px;padding:15px 17px;margin-bottom:18px}
-.key-box-ttl{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--ink2);margin-bottom:5px}
-.key-box p{font-size:12px;font-weight:300;color:var(--mid);line-height:1.6;margin-bottom:11px}
-.key-box a{color:var(--o);font-weight:600;text-decoration:none}
-.key-box a:hover{text-decoration:underline}
-.key-row{position:relative}
-.key-row input{width:100%;padding:13px 44px 13px 15px;background:var(--wh);border:1.5px solid var(--bdr);border-radius:8px;font-family:monospace;font-size:13px;letter-spacing:.03em;color:var(--ink);outline:none;transition:border-color .2s,box-shadow .2s}
-.key-row input:focus{border-color:var(--o);box-shadow:0 0 0 3px rgba(244,98,42,.1)}
-.key-eye{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--mut);font-size:16px;transition:color .15s;padding:4px}
-.key-eye:hover{color:var(--o)}
-.key-st{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;margin-top:7px}
-.key-st.ok{color:var(--grn)}.key-st.err{color:var(--red)}
-
-/* ══ EVENTS ══ */
-.ev-item{border:1.5px solid var(--bdr);border-radius:12px;margin-bottom:12px;overflow:hidden;animation:evIn .22s ease;background:var(--wh)}
-@keyframes evIn{from{opacity:0;transform:scale(.98)}to{opacity:1;transform:scale(1)}}
-.ev-head{background:var(--op);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--bdr)}
-.ev-num{font-family:var(--f);font-size:13px;font-weight:700;font-style:italic;color:var(--o)}
-.ev-del{background:none;border:none;cursor:pointer;color:var(--mut);font-size:19px;line-height:1;transition:color .15s;padding:0 2px}
-.ev-del:hover{color:var(--o)}
-.ev-body{padding:14px 15px}
-.ev-body .field{margin-bottom:11px}
+/* EVENT */
+.ev-item{background:var(--card);border:1.5px solid var(--bdr);border-radius:var(--r2);margin-bottom:14px;overflow:hidden}
+.ev-head{background:rgba(255,31,142,.07);padding:11px 15px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--bdr)}
+.ev-num{font-family:var(--f);font-size:13px;font-weight:700;font-style:italic;color:var(--pk)}
+.ev-del{background:none;border:none;cursor:pointer;color:var(--t3);font-size:21px;line-height:1;transition:color .15s;padding:0 4px}
+.ev-del:hover{color:var(--pk)}
+.ev-body{padding:15px 15px 17px}
+.ev-body .field{margin-bottom:13px}
 .ev-body .field:last-child{margin-bottom:0}
-.ev-body select,.ev-body input[type=time]{background:var(--paper)}
-.add-btn{width:100%;padding:13px;border:1.5px dashed var(--bdr);border-radius:12px;background:transparent;cursor:pointer;font-family:var(--s);font-size:14px;font-weight:600;color:var(--mid);display:flex;align-items:center;justify-content:center;gap:8px;transition:all .18s}
-.add-btn:hover{border-color:var(--o);color:var(--o);background:var(--op2)}
-.add-ic{width:22px;height:22px;border-radius:50%;background:var(--op);border:1.5px solid var(--bdr);display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--o);transition:all .15s}
-.add-btn:hover .add-ic{background:var(--o);color:var(--wh);border-color:var(--o)}
+.add-btn{width:100%;padding:14px;border:2px dashed rgba(255,31,142,.2);border-radius:var(--r2);background:transparent;cursor:pointer;font-family:var(--s);font-size:14px;font-weight:600;color:var(--t3);display:flex;align-items:center;justify-content:center;gap:9px;transition:all .18s}
+.add-btn:hover{border-color:var(--pk);color:var(--pk);background:rgba(255,31,142,.04)}
+.add-ic{width:25px;height:25px;border-radius:50%;background:var(--pk);color:#fff;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .15s}
+.add-btn:hover .add-ic{transform:scale(1.1)}
+.hint{font-size:12px;font-weight:300;font-style:italic;color:var(--t3);line-height:1.6;margin-top:9px}
 
-/* ══ CHIPS ══ */
-.chips-block{margin-bottom:20px}
-.chips-ttl-row{display:flex;align-items:baseline;gap:10px;margin-bottom:12px}
-.chips-ttl{font-family:var(--f);font-size:19px;font-weight:700;font-style:italic;color:var(--ink)}
-.chips-sub{font-size:11px;font-weight:500;color:var(--mut);letter-spacing:.06em}
-.chips-wrap{display:flex;flex-wrap:wrap;gap:7px}
-.chip{padding:8px 14px;border:1.5px solid var(--bdr);border-radius:30px;background:var(--wh);font-family:var(--s);font-size:13px;font-weight:500;color:var(--mid);cursor:pointer;transition:all .16s;display:flex;align-items:center;gap:5px;user-select:none}
-.chip:hover{border-color:var(--o3);color:var(--o2)}
-.chip.on{background:var(--o);border-color:var(--o);color:var(--wh);box-shadow:0 3px 10px rgba(244,98,42,.22)}
-.chip.tr.on{background:var(--am);border-color:var(--am);color:var(--wh)}
-.chip.gp.on{background:var(--op);border-color:var(--o3);color:var(--o)}
+/* CHIPS */
+.chips-blk{margin-bottom:20px}
+.chips-ttl{font-family:var(--f);font-size:20px;font-weight:700;font-style:italic;color:var(--t1);margin-bottom:12px;display:flex;align-items:baseline;gap:9px}
+.chips-cnt{font-size:11px;font-weight:400;color:var(--t3);font-style:normal;font-family:var(--s)}
+.chip{padding:8px 15px;border:1.5px solid var(--bdr);border-radius:30px;background:transparent;font-family:var(--s);font-size:13px;font-weight:500;color:var(--t2);cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:5px;user-select:none;margin:0 7px 8px 0}
+.chip:hover{border-color:var(--pk);color:var(--pk2)}
+.chip.on{background:var(--pk);border-color:var(--pk);color:#fff;box-shadow:0 0 14px rgba(255,31,142,.22)}
+.chip.tr.on{background:var(--pk2);border-color:var(--pk2);color:#0d0d0d}
+.chip.gp.on{background:rgba(255,31,142,.1);border-color:var(--pk);color:var(--pk)}
+.sdiv{display:flex;align-items:center;gap:13px;margin:20px 0}
+.sdiv-l{flex:1;height:1px;background:rgba(255,31,142,.1)}
+.sdiv-t{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);white-space:nowrap}
 
-/* ══ SEC DIV ══ */
-.sdiv{display:flex;align-items:center;gap:11px;margin:18px 0}
-.sdiv-l{flex:1;height:1px;background:var(--bdr)}
-.sdiv-t{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}
-
-/* ══ TIPS ══ */
-.tips-row{display:flex;align-items:center;justify-content:space-between;padding:13px 0;cursor:pointer;border-top:1px solid var(--bdr);border-bottom:1px solid var(--bdr)}
-.tips-lbl{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:700;color:var(--mid)}
-.tips-ic{width:24px;height:24px;border-radius:50%;background:var(--amp);border:1px solid #F2D9A0;display:flex;align-items:center;justify-content:center;font-size:12px}
-.tips-arr{font-size:13px;color:var(--mut);transition:transform .28s;display:inline-block}
+/* TIPS */
+.tips-row{display:flex;align-items:center;justify-content:space-between;padding:13px 0;cursor:pointer;border-top:1px solid var(--bdr);border-bottom:1px solid var(--bdr);margin-top:6px}
+.tips-lbl{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:700;color:var(--t2)}
+.tips-ic{width:24px;height:24px;border-radius:50%;background:rgba(255,31,142,.08);border:1px solid var(--bdr);display:flex;align-items:center;justify-content:center;font-size:12px}
+.tips-arr{font-size:12px;color:var(--t3);transition:transform .28s}
 .tips-arr.open{transform:rotate(180deg)}
-.tips-body{overflow:hidden;max-height:0;transition:max-height .38s cubic-bezier(.4,0,.2,1)}
-.tips-body.open{max-height:700px}
-.tip-item{padding:13px 0;border-bottom:1px solid var(--bdr)}
-.tip-item:last-child{border-bottom:none;padding-bottom:4px}
-.tip-n{font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--o3);margin-bottom:4px}
-.tip-t{font-size:14px;font-weight:700;color:var(--ink);margin-bottom:3px}
-.tip-b{font-size:13px;font-weight:300;color:var(--mid);line-height:1.7}
-.tip-b strong{font-weight:700;color:var(--ink2)}
+.tips-body{overflow:hidden;max-height:0;transition:max-height .35s cubic-bezier(.4,0,.2,1)}
+.tips-body.open{max-height:600px}
+.tip-item{padding:12px 0;border-bottom:1px solid rgba(255,31,142,.06)}
+.tip-item:last-child{border-bottom:none}
+.tip-n{font-size:10px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,31,142,.38);margin-bottom:3px}
+.tip-t{font-size:14px;font-weight:700;color:var(--t1);margin-bottom:3px}
+.tip-b{font-size:13px;font-weight:300;color:var(--t2);line-height:1.7}
+.tip-b strong{font-weight:700;color:var(--t1)}
 
-/* ══ FOOTER ══ */
-.pg-footer{padding:0 28px 28px}
-.next-btn{width:100%;padding:18px 22px;background:var(--o);color:var(--wh);border:none;border-radius:12px;cursor:pointer;font-family:var(--f);font-size:17px;font-weight:700;font-style:italic;display:flex;align-items:center;justify-content:space-between;box-shadow:0 6px 22px rgba(244,98,42,.26);transition:all .22s}
-.next-btn:hover{background:var(--o2);transform:translateY(-2px);box-shadow:0 10px 28px rgba(244,98,42,.32)}
-.next-btn:active{transform:translateY(0)}
-.next-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
-.prev-link{display:block;width:100%;text-align:center;margin-top:12px;padding:6px;font-size:12px;font-weight:500;color:var(--mut);background:none;border:none;cursor:pointer;font-family:var(--s);transition:color .15s}
-.prev-link:hover{color:var(--o)}
-
-/* ══ ERROR ══ */
-.err-bar{margin:0 28px 10px;padding:11px 14px;background:var(--redp);border:1.5px solid #FFBCBC;border-radius:8px;font-size:13px;font-weight:600;color:var(--red);display:none}
+/* ERROR */
+.err-bar{margin:0 28px 10px;padding:11px 15px;background:rgba(255,31,142,.07);border:1.5px solid rgba(255,31,142,.3);border-radius:var(--r);font-size:13px;font-weight:600;color:var(--pk2);display:none}
 .err-bar.show{display:block}
 
-/* ══ LOADING ══ */
-.ld-overlay{display:none;position:fixed;inset:0;background:rgba(255,252,250,.93);z-index:500;flex-direction:column;align-items:center;justify-content:center;gap:18px}
-.ld-overlay.show{display:flex}
-.ld-spin{width:46px;height:46px;border:3px solid var(--bdr);border-top-color:var(--o);border-radius:50%;animation:spin .85s linear infinite}
+/* LOADING */
+.ld-ov{display:none;position:fixed;inset:0;background:rgba(13,13,13,.94);z-index:1000;flex-direction:column;align-items:center;justify-content:center;gap:18px}
+.ld-ov.show{display:flex}
+.ld-ring{width:50px;height:50px;border:3px solid rgba(255,31,142,.14);border-top-color:var(--pk);border-radius:50%;animation:spin .85s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-.ld-svg{margin-bottom:4px}
-.ld-txt{font-family:var(--f);font-size:17px;font-weight:700;font-style:italic;color:var(--ink)}
-.ld-sub{font-size:12px;font-weight:300;color:var(--mid)}
+.ld-txt{font-family:var(--f);font-size:19px;font-weight:700;font-style:italic;color:var(--t1)}
+.ld-sub{font-size:12px;color:var(--t3)}
 .ld-dots span{animation:blink 1.2s infinite}
 .ld-dots span:nth-child(2){animation-delay:.2s}
 .ld-dots span:nth-child(3){animation-delay:.4s}
 @keyframes blink{0%,80%,100%{opacity:.2}40%{opacity:1}}
 
-/* ══ RESULT ══ */
-.re-head{background:linear-gradient(150deg,#FFF0E7 0%,var(--op2) 60%,#FFF9F5 100%);padding:52px 28px 28px;border-bottom:1px solid var(--bdr);position:relative;overflow:hidden}
-.rh-d1{position:absolute;right:-40px;top:-40px;width:200px;height:200px;border-radius:50%;background:rgba(244,98,42,.06);pointer-events:none}
-.rh-d2{position:absolute;left:-30px;bottom:-30px;width:120px;height:120px;border-radius:50%;background:rgba(242,169,59,.07);pointer-events:none}
-.re-tag{display:inline-flex;align-items:center;gap:7px;font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--o);margin-bottom:12px}
-.re-tag::before{content:'';display:inline-block;width:14px;height:2px;background:var(--o);border-radius:1px}
-.re-h2{font-family:var(--f);font-size:34px;font-weight:900;color:var(--ink);line-height:.95;letter-spacing:-.025em;margin-bottom:5px}
-.re-h2 em{font-style:italic;color:var(--o)}
-.re-date{font-size:12px;font-weight:300;color:var(--mut);font-style:italic;margin-bottom:20px}
-.re-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
-.r-met{background:var(--wh);border:1px solid var(--bdr);border-radius:12px;padding:13px 8px;text-align:center}
-.r-mv{font-family:var(--f);font-size:19px;font-weight:900;color:var(--o);display:block;line-height:1;margin-bottom:3px}
-.r-ml{font-size:10px;color:var(--mut);letter-spacing:.07em;text-transform:uppercase}
+/* RESULT HEADER */
+.re-head{padding:52px 28px 26px;border-bottom:1px solid var(--bdr);position:relative;overflow:hidden}
+.re-glow{position:absolute;width:220px;height:220px;border-radius:50%;background:var(--pk);right:-65px;top:-65px;opacity:.08;pointer-events:none}
+.re-tag{display:inline-flex;align-items:center;gap:7px;font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--pk);margin-bottom:12px}
+.re-tag::before{content:'';display:inline-block;width:13px;height:2px;background:var(--pk);border-radius:1px}
+.re-h2{font-family:var(--f);font-size:clamp(30px,7vw,46px);font-weight:900;line-height:.92;letter-spacing:-.025em;margin-bottom:6px}
+.re-h2 em{font-style:italic;color:var(--pk)}
+.re-date{font-size:12px;font-weight:300;color:var(--t3);font-style:italic;margin-bottom:20px}
+.re-mets{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.r-m{background:var(--card);border:1px solid var(--bdr);border-radius:var(--r);padding:14px 8px;text-align:center}
+.r-mv{font-family:var(--f);font-size:21px;font-weight:900;color:var(--pk);display:block;line-height:1;margin-bottom:3px}
+.r-ml{font-size:10px;color:var(--t3);letter-spacing:.07em;text-transform:uppercase}
 
-/* ══ TIMELINE ══ */
-.tl-body{padding:8px 0 20px;background:var(--paper)}
-.tl-item{position:relative;padding:0 22px 0 56px;margin-bottom:6px}
-.tl-stem{position:absolute;left:31px;top:30px;width:1.5px;height:calc(100% + 6px);background:var(--bdr)}
+/* TIMELINE */
+.tl{padding:10px 0 24px}
+.tl-item{position:relative;padding:0 22px 0 62px;margin-bottom:6px}
+.tl-stem{position:absolute;left:33px;top:30px;width:1.5px;height:calc(100% + 6px);background:rgba(255,31,142,.1)}
 .tl-item.last .tl-stem{display:none}
-.tl-dot{position:absolute;left:20px;top:15px;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;z-index:2;border:2.5px solid var(--paper)}
-.d-home{background:var(--mut)}.d-fixed{background:var(--o)}.d-gap{background:var(--am)}
-.tl-card{background:var(--wh);border:1px solid var(--bdr);border-left:3px solid var(--mut);border-radius:0 12px 12px 0;padding:13px 14px}
-.tl-card.cf{border-left-color:var(--o)}.tl-card.cg{border-left-color:var(--am)}
+.tl-dot{position:absolute;left:22px;top:15px;width:22px;height:22px;border-radius:50%;z-index:2;border:2.5px solid var(--bg)}
+.d-home{background:#2a2a2a}.d-fixed{background:var(--pk)}.d-gap{background:var(--pk2)}
+.tl-card{background:var(--card);border:1px solid var(--bdr);border-left:3px solid #2a2a2a;border-radius:0 var(--r) var(--r) 0;padding:13px 15px}
+.tl-card.cf{border-left-color:var(--pk)}.tl-card.cg{border-left-color:var(--pk2)}
 .tl-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:5px}
-.tl-name{font-family:var(--f);font-size:15px;font-weight:700;color:var(--ink);line-height:1.2;flex:1}
-.tl-time{font-size:11px;font-weight:600;color:var(--mut);white-space:nowrap;padding-top:2px}
+.tl-name{font-family:var(--f);font-size:15px;font-weight:700;line-height:1.2;flex:1}
+.tl-time{font-size:11px;font-weight:600;color:var(--t3);white-space:nowrap;padding-top:2px}
 .tl-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px}
 .tl-tag{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:3px 9px;border-radius:20px}
-.tt-f{background:var(--op);color:var(--o);border:1px solid var(--o3)}
-.tt-g{background:var(--amp);color:#A0660A;border:1px solid #F2D9A0}
-.tt-c{background:var(--paper);color:var(--mid);border:1px solid var(--bdr)}
-.tl-addr{font-size:12px;color:var(--mid);margin-bottom:5px;line-height:1.5}
+.tt-f{background:rgba(255,31,142,.1);color:var(--pk2);border:1px solid rgba(255,31,142,.2)}
+.tt-g{background:rgba(255,105,180,.07);color:var(--pk2);border:1px solid rgba(255,105,180,.18)}
+.tt-c{background:rgba(255,255,255,.05);color:var(--t3);border:1px solid var(--t4)}
+.tl-addr{font-size:12px;color:var(--t3);margin-bottom:5px;line-height:1.5}
 .tl-rating{display:flex;align-items:center;gap:6px;margin-bottom:5px}
-.tl-stars{color:var(--am);font-size:13px}
-.tl-rv{font-family:var(--f);font-size:14px;font-weight:700;color:var(--ink)}
-.tl-dur{font-size:12px;color:var(--mut)}
-.tl-reason{font-size:12px;font-weight:300;font-style:italic;color:var(--mid);line-height:1.65;margin-bottom:9px;padding-left:10px;border-left:2px solid var(--bdr)}
-.tl-acts{display:flex;gap:6px;flex-wrap:wrap}
+.tl-stars{color:var(--pk2);font-size:13px}
+.tl-rv{font-family:var(--f);font-size:14px;font-weight:700}
+.tl-dur{font-size:12px;color:var(--t3)}
+.tl-reason{font-size:12px;font-weight:300;font-style:italic;color:var(--t2);line-height:1.65;margin-bottom:9px;padding-left:10px;border-left:2px solid rgba(255,31,142,.14)}
+.tl-acts{display:flex;gap:7px;flex-wrap:wrap}
 .tl-act{padding:7px 13px;border-radius:30px;font-family:var(--s);font-size:12px;font-weight:700;text-decoration:none;cursor:pointer;border:none;display:inline-flex;align-items:center;gap:4px;transition:all .15s}
-.a-map{background:var(--o);color:var(--wh)}.a-map:hover{background:var(--o2)}
-.a-dp{background:var(--op);color:var(--o);border:1px solid var(--bdr)}.a-dp:hover{background:#ffe4d4}
-.tl-tr{display:flex;align-items:center;gap:8px;padding:6px 22px 6px 56px;font-size:11px;font-weight:500;color:var(--mut);letter-spacing:.04em;text-transform:uppercase;position:relative}
-.tl-tr-ic{width:14px;height:14px;border-radius:50%;background:var(--paper);border:1.5px solid var(--bdr);display:flex;align-items:center;justify-content:center;font-size:8px;position:absolute;left:25px}
+.a-map{background:var(--pk);color:#fff}.a-map:hover{background:#E0007A}
+.a-dp{background:rgba(255,31,142,.08);color:var(--pk2);border:1px solid var(--bdr)}.a-dp:hover{background:rgba(255,31,142,.14)}
+.tl-tr{display:flex;align-items:center;gap:8px;padding:6px 22px 6px 62px;font-size:11px;font-weight:500;color:var(--t3);letter-spacing:.04em;text-transform:uppercase;position:relative}
+.tl-tr-ic{width:13px;height:13px;border-radius:50%;background:var(--card);border:1.5px solid var(--bdr);display:flex;align-items:center;justify-content:center;font-size:8px;position:absolute;left:27px}
 
-/* ══ RESULT ACTIONS ══ */
-.re-acts{padding:18px 28px 8px;display:flex;flex-direction:column;gap:9px}
-.re-btn{width:100%;padding:16px 22px;border:none;border-radius:12px;cursor:pointer;font-family:var(--f);font-size:16px;font-weight:700;font-style:italic;display:flex;align-items:center;justify-content:space-between;transition:all .2s}
-.re-btn.primary{background:var(--o);color:var(--wh);box-shadow:0 5px 18px rgba(244,98,42,.26)}
-.re-btn.primary:hover{background:var(--o2);transform:translateY(-1px)}
-.re-btn.sec{background:var(--wh);color:var(--ink);border:1.5px solid var(--bdr);font-size:13px;font-style:normal;font-family:var(--s);font-weight:700;letter-spacing:.06em;text-transform:uppercase;justify-content:center}
-.re-btn.sec:hover{background:var(--paper)}
-.re-btn.sec.copied{background:var(--grnp);color:var(--grn);border-color:#9FE0C6}
-
-/* ══ BOT NAV ══ */
-.bot-nav{position:fixed;bottom:0;left:0;right:0;background:var(--wh);border-top:1px solid var(--bdr);display:flex;z-index:200;padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -4px 16px rgba(28,20,16,.05)}
-.bot-item{flex:1;padding:10px 0 13px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;transition:all .15s;border-right:1px solid var(--bdr)}
-.bot-item:last-child{border-right:none}
-.bot-ic{font-size:18px;transition:transform .15s}
-.bot-lbl{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--mut)}
-.bot-item.active .bot-lbl{color:var(--o)}
-.bot-item.active .bot-ic{transform:scale(1.1)}
+/* RESULT ACTIONS */
+.re-acts{padding:18px 28px 10px;display:flex;flex-direction:column;gap:10px}
+.re-btn{width:100%;padding:17px 22px;border:none;border-radius:var(--r2);cursor:pointer;font-family:var(--f);font-size:16px;font-weight:700;font-style:italic;display:flex;align-items:center;justify-content:space-between;transition:all .2s}
+.re-btn.primary{background:var(--pk);color:#fff;box-shadow:0 0 30px rgba(255,31,142,.26)}
+.re-btn.primary:hover{background:#E0007A;transform:translateY(-1px)}
+.re-btn.sec{background:var(--card);color:var(--t1);border:1.5px solid var(--bdr);font-size:13px;font-style:normal;font-family:var(--s);font-weight:700;letter-spacing:.06em;text-transform:uppercase;justify-content:center}
+.re-btn.sec:hover{border-color:var(--pk)}
+.re-btn.sec.copied{background:rgba(42,157,107,.1);color:#5DCAA5;border-color:rgba(42,157,107,.3)}
 </style>
 </head>
 <body>
 
-<!-- LOADING -->
-<div class="ld-overlay" id="ldOverlay">
-  <div class="ld-spin"></div>
-  <svg class="ld-svg" width="60" height="40" viewBox="0 0 60 40" fill="none">
-    <path d="M5 35 Q15 10 30 20 Q45 30 55 5" stroke="#F4622A" stroke-width="2" stroke-linecap="round" fill="none" stroke-dasharray="4 3"/>
-    <circle cx="30" cy="20" r="4" fill="#F2A93B"/>
-    <circle cx="5" cy="35" r="3" fill="#F4622A"/>
-    <circle cx="55" cy="5" r="3" fill="#F4622A"/>
-  </svg>
+<div class="ld-ov" id="ld">
+  <div class="ld-ring"></div>
   <div class="ld-txt">正在规划行程</div>
-  <div class="ld-sub">分析路线，寻找最佳填充地点<span class="ld-dots"><span>.</span><span>.</span><span>.</span></span></div>
+  <div class="ld-sub">寻找最顺路的好去处<span class="ld-dots"><span>.</span><span>.</span><span>.</span></span></div>
 </div>
 
-<!-- ══ COVER ══ -->
+<div class="wrap">
+
+<!-- COVER -->
 <div class="page active" id="pg-cover">
-  <div class="cover">
-    <div class="cv-top">
-      <span class="cv-label">智能行程规划</span>
-      <span class="cv-date" id="cvDate"></span>
+  <div class="cv">
+
+    <!-- ① HERO — full viewport -->
+    <div class="cv-hero">
+      <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+      <div class="cv-top">
+        <span class="cv-badge">Day Planner</span>
+        <span class="cv-dt" id="cvDate"></span>
+      </div>
+      <div class="cv-body">
+        <div class="cv-h1">把今天<br><em>排满</em></div>
+        <p class="cv-sub">下午有剧本杀，晚上有饭局，中间两小时不知道去哪？<br>填入你的行程，AI 自动帮你找到顺路的好去处。</p>
+      </div>
+      <div class="cv-scroll-hint" onclick="document.getElementById('acc-intro').scrollIntoView({behavior:'smooth'})">
+        <span>了解更多</span>
+        <span class="cv-arrow-down"></span>
+      </div>
     </div>
-    <div class="cv-body">
-      <div class="cv-eye">Day Planner</div>
-      <div class="cv-h1">把今天<br><em>排满</em></div>
-      <p class="cv-tagline">填入已确定的活动，智能分析空档，按顺路原则推荐附近好去处。</p>
+
+    <!-- ② ACCORDION: 这是什么 -->
+    <div class="acc" id="acc-intro">
+      <div class="acc-row" onclick="togAcc('intro')">
+        <div class="acc-left">
+          <div class="acc-ico">💡</div>
+          <div>
+            <div class="acc-label">这是什么？</div>
+            <div class="acc-sub">点击展开了解工具介绍</div>
+          </div>
+        </div>
+        <span class="acc-arr" id="arr-intro">↓</span>
+      </div>
+      <div class="acc-body" id="body-intro">
+        <div class="acc-inner">
+          <div class="cv-intro-tag" style="margin-bottom:16px">工具介绍</div>
+          <div class="cv-intro-h">出行从来不缺活动，<br>缺的是<em>填满空档</em>的灵感</div>
+          <p class="cv-intro-p">每次出门都有两三个确定的安排，但活动之间总有一两个小时的空白——太短不够去远的，太长又不想傻等。「今日满排」就是为这个场景设计的：把你的活动告诉它，它帮你分析每段空档，然后找到顺路、评分高、值得去的地方，塞满你的一天。</p>
+          <div class="cv-scenarios" style="margin-top:20px">
+            <div class="cv-scene active-scene">
+              <span class="cv-scene-ico">🎭</span>
+              <div class="cv-scene-ttl">下午剧本杀，晚上聚餐</div>
+              <div class="cv-scene-desc">中间3小时 → 推荐附近评分最高的咖啡馆 + 顺路打卡点</div>
+            </div>
+            <div class="cv-scene">
+              <span class="cv-scene-ico">🏋️</span>
+              <div class="cv-scene-ttl">上午健身，下午看电影</div>
+              <div class="cv-scene-desc">中间2小时 → 推荐附近轻食午餐 + 逛街路线</div>
+            </div>
+            <div class="cv-scene">
+              <span class="cv-scene-ico">🎨</span>
+              <div class="cv-scene-ttl">上午看展，傍晚约饭</div>
+              <div class="cv-scene-desc">中间4小时 → 推荐同区域书店 + 网红甜品店</div>
+            </div>
+            <div class="cv-scene">
+              <span class="cv-scene-ico">🎵</span>
+              <div class="cv-scene-ttl">晚上演唱会，提前到达</div>
+              <div class="cv-scene-desc">提前2小时 → 推荐场馆附近适合等待的地方</div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-    <!-- COVER ILLUSTRATION: Google Maps style -->
-    <div class="cv-illus">
-      <svg viewBox="0 0 340 180" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <!-- map base -->
-        <rect width="340" height="180" fill="#F2F1ED" rx="16"/>
-        <!-- roads -->
-        <rect x="0" y="80" width="340" height="20" fill="white" opacity=".85"/>
-        <rect x="0" y="140" width="340" height="14" fill="white" opacity=".7"/>
-        <rect x="100" y="0" width="16" height="180" fill="white" opacity=".85"/>
-        <rect x="230" y="0" width="12" height="180" fill="white" opacity=".7"/>
-        <!-- green parks -->
-        <rect x="0" y="0" width="96" height="76" fill="#C8E6C9" rx="0" opacity=".6"/>
-        <rect x="120" y="0" width="106" height="76" fill="#C8E6C9" rx="0" opacity=".4"/>
-        <rect x="246" y="0" width="94" height="76" fill="#DCEDC8" rx="0" opacity=".5"/>
-        <rect x="0" y="104" width="96" height="32" fill="#C8E6C9" opacity=".4"/>
-        <rect x="246" y="104" width="94" height="32" fill="#C8E6C9" opacity=".4"/>
-        <!-- buildings -->
-        <rect x="8" y="8" width="30" height="24" rx="2" fill="#D5D0C8"/>
-        <rect x="42" y="12" width="20" height="20" rx="2" fill="#C9C4BC"/>
-        <rect x="120" y="8" width="28" height="22" rx="2" fill="#D5D0C8"/>
-        <rect x="152" y="12" width="22" height="18" rx="2" fill="#C9C4BC"/>
-        <rect x="178" y="6" width="18" height="26" rx="2" fill="#D5D0C8"/>
-        <rect x="246" y="8" width="32" height="20" rx="2" fill="#D5D0C8"/>
-        <rect x="282" y="10" width="24" height="16" rx="2" fill="#C9C4BC"/>
-        <rect x="120" y="108" width="26" height="20" rx="2" fill="#D5D0C8"/>
-        <rect x="150" y="110" width="20" height="16" rx="2" fill="#C9C4BC"/>
-        <rect x="174" y="106" width="24" height="22" rx="2" fill="#D5D0C8"/>
-        <!-- ROUTE LINE: Google blue -->
-        <path d="M40 90 L100 90 Q108 90 108 82 L108 30 Q108 20 118 20 L228 20 Q240 20 240 30 L240 90 L300 90" stroke="#4285F4" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-        <!-- route highlight -->
-        <path d="M40 90 L100 90 Q108 90 108 82 L108 30 Q108 20 118 20 L228 20 Q240 20 240 30 L240 90 L300 90" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity=".4" stroke-dasharray="6 8"/>
-        <!-- START marker (home) -->
-        <circle cx="40" cy="90" r="12" fill="white" stroke="#34A853" stroke-width="2.5"/>
-        <circle cx="40" cy="90" r="6" fill="#34A853"/>
-        <!-- END marker (destination) -->
-        <path d="M314 76 C314 68.5 307.5 62 301 62 C294.5 62 288 68.5 288 76 C288 85.5 301 98 301 98 C301 98 314 85.5 314 76Z" fill="#EA4335"/>
-        <circle cx="301" cy="76" r="6" fill="white"/>
-        <!-- WAYPOINT pins on route -->
-        <circle cx="108" cy="55" r="8" fill="#EA4335" opacity=".85"/>
-        <circle cx="108" cy="55" r="4" fill="white"/>
-        <circle cx="240" cy="55" r="8" fill="#EA4335" opacity=".85"/>
-        <circle cx="240" cy="55" r="4" fill="white"/>
-        <!-- INFO CARD bottom left -->
-        <rect x="10" y="118" width="130" height="48" rx="10" fill="white" style="filter:drop-shadow(0 3px 8px rgba(0,0,0,.14))"/>
-        <circle cx="30" cy="135" r="10" fill="#FEF3E2"/>
-        <text x="30" y="139" font-size="12" text-anchor="middle" font-family="sans-serif">☕</text>
-        <rect x="46" y="127" width="60" height="6" rx="3" fill="#E0DDD8"/>
-        <rect x="46" y="137" width="40" height="4" rx="2" fill="#EDE9E3"/>
-        <text x="46" y="157" font-size="9" fill="#FBBC04" font-family="sans-serif" font-weight="700">★ 4.8 · 800m</text>
-        <!-- DISTANCE BADGE top right -->
-        <rect x="240" y="108" width="88" height="24" rx="12" fill="#4285F4"/>
-        <text x="284" y="124" font-size="10" fill="white" text-anchor="middle" font-family="sans-serif" font-weight="700">顺路推荐</text>
-        <!-- LABEL bottom right -->
-        <rect x="196" y="152" width="130" height="22" rx="11" fill="white" opacity=".9" style="filter:drop-shadow(0 1px 4px rgba(0,0,0,.1))"/>
-        <text x="261" y="167" font-size="10" fill="#1C1410" text-anchor="middle" font-family="sans-serif" font-weight="600">智能填充空档时间</text>
-      </svg>
+
+    <!-- ③ ACCORDION: 怎么用 -->
+    <div class="acc" id="acc-how" style="border-bottom:1px solid var(--bdr)">
+      <div class="acc-row" onclick="togAcc('how')">
+        <div class="acc-left">
+          <div class="acc-ico">📖</div>
+          <div>
+            <div class="acc-label">怎么用？</div>
+            <div class="acc-sub">三步搞定，五分钟排满一天</div>
+          </div>
+        </div>
+        <span class="acc-arr" id="arr-how">↓</span>
+      </div>
+      <div class="acc-body" id="body-how">
+        <div class="acc-inner">
+          <div class="cv-steps">
+            <div class="cv-step">
+              <div class="cv-step-num">01</div>
+              <div class="cv-step-body">
+                <div class="cv-step-ttl">填入你已确定的活动</div>
+                <div class="cv-step-desc">选择活动类型（剧本杀、午饭、健身……）、填写地点和时间段。可以添加多个，<strong>不用担心顺序</strong>，系统自动排列。</div>
+              </div>
+            </div>
+            <div class="cv-step">
+              <div class="cv-step-num">02</div>
+              <div class="cv-step-body">
+                <div class="cv-step-ttl">告诉它你的偏好</div>
+                <div class="cv-step-desc">选择喜欢的空档类型（咖啡、公园、小吃……）和出行方式，设定<strong>最短空档门槛</strong>，低于这个时长的空档不会被推荐。</div>
+              </div>
+            </div>
+            <div class="cv-step">
+              <div class="cv-step-num">03</div>
+              <div class="cv-step-body">
+                <div class="cv-step-ttl">获得完整行程，一键导航</div>
+                <div class="cv-step-desc">AI 分析你的路线，推荐<strong>顺路且真实存在</strong>的地点，附带评分和推荐理由，直接跳转 Google Maps 或大众点评。</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
+
+    <!-- ④ CTA -->
     <div class="cv-cta">
-      <div class="cv-pills">
-        <div class="cv-pill"><strong>顺路</strong>优先</div>
-        <div class="cv-pill">空档<strong>智能填充</strong></div>
-        <div class="cv-pill"><strong>一键</strong>导航</div>
-      </div>
-      <button class="start-btn" onclick="goPage('pg-s1')">开始规划今天 <span>→</span></button>
+      <div class="cv-cta-note">免费使用 · 需要 OpenRouter API Key</div>
+      <button class="btn-go" onclick="goPage('pg-s1')">开始规划今天 <span>→</span></button>
     </div>
+
   </div>
 </div>
 
-<!-- ══ STEP 1 ══ -->
+<!-- STEP 1 -->
 <div class="page" id="pg-s1">
-  <div class="pg-head">
-    <div class="ph-d1"></div><div class="ph-d2"></div>
-    <div class="prog"><div class="prog-s done"></div><div class="prog-s"></div><div class="prog-s"></div></div>
-    <button class="pg-back" onclick="goPage('pg-cover')">← 返回</button>
-    <div class="pg-ey"><span></span>Step 01 of 03</div>
-    <div class="pg-h2">基本<br><em>设置</em></div>
-    <div class="pg-rule"></div>
-    <div class="pg-num">01</div>
-    <!-- step 1 illustration: Google Maps style map with route -->
-    <div class="pg-illus">
-      <svg viewBox="0 0 300 110" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <!-- map background tiles -->
-        <rect x="0" y="0" width="300" height="110" fill="#F2F1ED" rx="0"/>
-        <!-- road grid -->
-        <rect x="0" y="48" width="300" height="14" fill="#FFFFFF" opacity=".9"/>
-        <rect x="120" y="0" width="12" height="110" fill="#FFFFFF" opacity=".9"/>
-        <rect x="220" y="0" width="8" height="110" fill="#FFFFFF" opacity=".7"/>
-        <rect x="0" y="85" width="300" height="8" fill="#FFFFFF" opacity=".7"/>
-        <!-- green areas -->
-        <rect x="0" y="0" width="55" height="45" fill="#C8E6C9" rx="4" opacity=".7"/>
-        <rect x="230" y="60" width="70" height="50" fill="#C8E6C9" rx="4" opacity=".7"/>
-        <!-- buildings (grey blocks) -->
-        <rect x="60" y="5" width="20" height="18" rx="2" fill="#D5D0C8"/>
-        <rect x="84" y="8" width="28" height="15" rx="2" fill="#C9C4BC"/>
-        <rect x="136" y="5" width="22" height="20" rx="2" fill="#D5D0C8"/>
-        <rect x="162" y="8" width="18" height="14" rx="2" fill="#C9C4BC"/>
-        <rect x="60" y="66" width="22" height="16" rx="2" fill="#D5D0C8"/>
-        <rect x="86" y="70" width="30" height="12" rx="2" fill="#C9C4BC"/>
-        <rect x="136" y="66" width="20" height="18" rx="2" fill="#D5D0C8"/>
-        <rect x="160" y="68" width="16" height="13" rx="2" fill="#C9C4BC"/>
-        <!-- route line -->
-        <path d="M50 55 L100 55 Q115 55 115 40 L115 25 Q115 10 130 10 L200 10 Q215 10 215 25 L215 55 L260 55" stroke="#4285F4" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-        <path d="M50 55 L100 55 Q115 55 115 40 L115 25 Q115 10 130 10 L200 10 Q215 10 215 25 L215 55 L260 55" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity=".5" stroke-dasharray="4 6"/>
-        <!-- start pin (home) -->
-        <circle cx="50" cy="55" r="10" fill="white" stroke="#4285F4" stroke-width="2"/>
-        <circle cx="50" cy="55" r="5" fill="#4285F4"/>
-        <!-- end pin (destination) -->
-        <path d="M260 44 C260 38 254 32 248 32 C242 32 236 38 236 44 C236 52 248 62 248 62 C248 62 260 52 260 44Z" fill="#EA4335"/>
-        <circle cx="248" cy="44" r="5" fill="white"/>
-        <!-- info card overlay -->
-        <rect x="10" y="72" width="100" height="32" rx="6" fill="white" style="filter:drop-shadow(0 2px 4px rgba(0,0,0,.15))"/>
-        <circle cx="24" cy="88" r="6" fill="#FBBC04"/>
-        <rect x="34" y="82" width="48" height="5" rx="2.5" fill="#E0DDD8"/>
-        <rect x="34" y="91" width="32" height="4" rx="2" fill="#EDE9E3"/>
-        <!-- distance badge -->
-        <rect x="180" y="72" width="60" height="20" rx="10" fill="#4285F4"/>
-        <text x="210" y="86" font-size="9" fill="white" text-anchor="middle" font-family="sans-serif" font-weight="700">顺路规划</text>
-      </svg>
+  <div class="pg-shell">
+    <div class="ph">
+      <div class="ph-glow"></div>
+      <div class="prog"><div class="ps done"></div><div class="ps"></div><div class="ps"></div></div>
+      <button class="ph-back" onclick="goPage('pg-cover')">← 返回</button>
+      <div class="ph-ey"><i></i>Step 01 of 03</div>
+      <div class="ph-h2">基本<br><em>信息</em></div>
+      <div class="ph-rule"></div>
     </div>
-  </div>
-  <div class="pg-body">
-    <div class="field">
-      <label class="fl">🏙 城市</label>
-      <div class="sel-wrap">
-        <select id="citySelect">
-          <option value="">请选择城市</option>
-          <optgroup label="直辖市">
-            <option value="北京">北京</option>
-            <option value="上海">上海</option>
-            <option value="广州">广州</option>
-            <option value="深圳">深圳</option>
-          </optgroup>
-          <optgroup label="热门城市">
-            <option value="成都">成都</option>
-            <option value="杭州">杭州</option>
-            <option value="武汉">武汉</option>
-            <option value="西安">西安</option>
-            <option value="南京">南京</option>
-            <option value="重庆">重庆</option>
-            <option value="苏州">苏州</option>
-            <option value="天津">天津</option>
-            <option value="长沙">长沙</option>
-            <option value="厦门">厦门</option>
-            <option value="青岛">青岛</option>
-            <option value="宁波">宁波</option>
-            <option value="郑州">郑州</option>
-            <option value="合肥">合肥</option>
-            <option value="福州">福州</option>
-          </optgroup>
-          <optgroup label="旅游目的地">
-            <option value="三亚">三亚</option>
-            <option value="丽江">丽江</option>
-            <option value="大理">大理</option>
-            <option value="桂林">桂林</option>
-            <option value="张家界">张家界</option>
-            <option value="黄山">黄山</option>
-          </optgroup>
-        </select>
-        <span class="sel-arrow">▼</span>
+    <div class="pb">
+      <div class="frow">
+        <div class="field">
+          <label class="fl">🏙 城市</label>
+          <div class="sw">
+            <select id="citySelect">
+              <option value="">请选择城市</option>
+              <optgroup label="直辖市"><option>北京</option><option>上海</option><option>广州</option><option>深圳</option></optgroup>
+              <optgroup label="热门城市"><option>成都</option><option>杭州</option><option>武汉</option><option>西安</option><option>南京</option><option>重庆</option><option>苏州</option><option>天津</option><option>长沙</option><option>厦门</option><option>青岛</option><option>郑州</option><option>合肥</option><option>福州</option><option>宁波</option></optgroup>
+              <optgroup label="旅游目的地"><option>三亚</option><option>丽江</option><option>大理</option><option>桂林</option><option>黄山</option><option>张家界</option></optgroup>
+            </select>
+            <span class="sw-a">▼</span>
+          </div>
+        </div>
+        <div class="field">
+          <label class="fl">📅 出行日期</label>
+          <div class="ic"><div class="ic-ico">📅</div><input type="date" id="tripDate"/></div>
+        </div>
+      </div>
+      <div class="field">
+        <label class="fl">📍 出发 / 终点（你家地址）</label>
+        <div class="ic"><div class="ic-ico">📍</div><input type="text" id="homeAddr" placeholder="如：北京市朝阳区十里铺地铁站"/></div>
+      </div>
+      <div class="frow">
+        <div class="field">
+          <label class="fl">👥 出行人数</label>
+          <div class="pp-wrap" id="peoplePick"></div>
+        </div>
+        <div class="field">
+          <label class="fl">💰 人均预算</label>
+          <div class="pp-wrap" id="budgetPick"></div>
+        </div>
       </div>
     </div>
-
-    <div class="field">
-      <label class="fl">出发 / 终点</label>
-      <div class="input-card">
-        <div class="ic ic-pin">📍</div>
-        <input type="text" id="homeDetail" placeholder="你家地址或附近地铁站"/>
-      </div>
-    </div>
-
-    <div class="field">
-      <label class="fl">出行日期</label>
-      <div class="input-card">
-        <div class="ic ic-cal">📅</div>
-        <input type="date" id="tripDate" style="border:none;outline:none;background:transparent;font-family:var(--s);font-size:15px;font-weight:500;color:var(--ink);flex:1;padding:0;-webkit-appearance:none"/>
-      </div>
-    </div>
-
-    <div class="field">
-      <label class="fl">👥 出行人数</label>
-      <div class="pill-pick" id="peoplePick"></div>
-    </div>
-
-    <div class="field">
-      <label class="fl">💰 人均预算</label>
-      <div class="pill-pick" id="budgetPick"></div>
-    </div>
-  </div>
-  <div class="err-bar" id="err1"></div>
-  <div class="pg-footer">
-    <button class="next-btn" onclick="s1Next()">下一步：填写活动 <span class="btn-arr">→</span></button>
+    <div class="err-bar" id="err1"></div>
+    <div class="pf"><button class="btn-next" onclick="s1Next()">下一步：填写活动 <span>→</span></button></div>
   </div>
 </div>
 
-<!-- ══ STEP 2 ══ -->
+<!-- STEP 2 -->
 <div class="page" id="pg-s2">
-  <div class="pg-head">
-    <div class="ph-d1"></div><div class="ph-d2"></div>
-    <div class="prog"><div class="prog-s done"></div><div class="prog-s done"></div><div class="prog-s"></div></div>
-    <button class="pg-back" onclick="goPage('pg-s1')">← 上一步</button>
-    <div class="pg-ey"><span></span>Step 02 of 03</div>
-    <div class="pg-h2">已确定<br><em>的活动</em></div>
-    <div class="pg-rule"></div>
-    <div class="pg-num">02</div>
-    <!-- step 2 illustration: Google Maps timeline card style -->
-    <div class="pg-illus">
-      <svg viewBox="0 0 300 110" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <!-- map bg -->
-        <rect width="300" height="110" fill="#F2F1ED"/>
-        <rect x="0" y="50" width="300" height="10" fill="white" opacity=".8"/>
-        <rect x="80" y="0" width="8" height="110" fill="white" opacity=".6"/>
-        <rect x="200" y="0" width="8" height="110" fill="white" opacity=".6"/>
-        <rect x="0" y="85" width="300" height="6" fill="white" opacity=".6"/>
-        <rect x="0" y="0" width="60" height="46" fill="#C8E6C9" opacity=".5" rx="3"/>
-        <rect x="210" y="56" width="90" height="54" fill="#C8E6C9" opacity=".5" rx="3"/>
-        <!-- route with stops -->
-        <circle cx="30" cy="55" r="8" fill="white" stroke="#34A853" stroke-width="2.5"/>
-        <circle cx="30" cy="55" r="3.5" fill="#34A853"/>
-        <line x1="38" y1="55" x2="95" y2="55" stroke="#4285F4" stroke-width="3" stroke-linecap="round"/>
-        <!-- stop 1 pin -->
-        <path d="M110 44 C110 38.5 104.5 33 99 33 C93.5 33 88 38.5 88 44 C88 51.5 99 62 99 62 C99 62 110 51.5 110 44Z" fill="#EA4335"/>
-        <circle cx="99" cy="44" r="4.5" fill="white"/>
-        <line x1="110" y1="55" x2="155" y2="55" stroke="#4285F4" stroke-width="3" stroke-linecap="round" stroke-dasharray="6 4"/>
-        <!-- gap indicator -->
-        <rect x="130" y="44" width="36" height="18" rx="9" fill="#FBBC04"/>
-        <text x="148" y="57" font-size="9" fill="white" text-anchor="middle" font-family="sans-serif" font-weight="700">空档</text>
-        <line x1="165" y1="55" x2="210" y2="55" stroke="#4285F4" stroke-width="3" stroke-linecap="round"/>
-        <!-- stop 2 pin -->
-        <path d="M228 44 C228 38.5 222.5 33 217 33 C211.5 33 206 38.5 206 44 C206 51.5 217 62 217 62 C217 62 228 51.5 228 44Z" fill="#EA4335"/>
-        <circle cx="217" cy="44" r="4.5" fill="white"/>
-        <line x1="228" y1="55" x2="268" y2="55" stroke="#4285F4" stroke-width="3" stroke-linecap="round"/>
-        <!-- end home -->
-        <circle cx="275" cy="55" r="8" fill="white" stroke="#34A853" stroke-width="2.5"/>
-        <circle cx="275" cy="55" r="3.5" fill="#34A853"/>
-        <!-- distance label bottom -->
-        <rect x="10" y="76" width="80" height="20" rx="10" fill="white" style="filter:drop-shadow(0 1px 3px rgba(0,0,0,.12))"/>
-        <text x="50" y="90" font-size="9" fill="#1C1410" text-anchor="middle" font-family="sans-serif" font-weight="600">添加你的活动</text>
-      </svg>
+  <div class="pg-shell">
+    <div class="ph">
+      <div class="ph-glow"></div>
+      <div class="prog"><div class="ps done"></div><div class="ps done"></div><div class="ps"></div></div>
+      <button class="ph-back" onclick="goPage('pg-s1')">← 上一步</button>
+      <div class="ph-ey"><i></i>Step 02 of 03</div>
+      <div class="ph-h2">已确定<br><em>的活动</em></div>
+      <div class="ph-rule"></div>
     </div>
-  </div>
-  <div class="pg-body">
-    <div id="evWrap"></div>
-    <button class="add-btn" onclick="addEv()"><div class="add-ic">+</div>添加已确定活动</button>
-    <p class="hint">剧本杀、餐厅、演出、健身…填入后自动分析活动间的空档</p>
-  </div>
-  <div class="err-bar" id="err2"></div>
-  <div class="pg-footer">
-    <button class="next-btn" onclick="s2Next()">下一步：偏好设置 <span class="btn-arr">→</span></button>
-    <button class="prev-link" onclick="goPage('pg-s1')">返回修改设置</button>
+    <div class="pb">
+      <div id="evWrap"></div>
+      <button class="add-btn" onclick="addEv()"><div class="add-ic">+</div>添加已确定活动</button>
+      <p class="hint">剧本杀、午饭、演出、健身…填入后自动分析活动间空档</p>
+    </div>
+    <div class="err-bar" id="err2"></div>
+    <div class="pf">
+      <button class="btn-next" onclick="s2Next()">下一步：偏好设置 <span>→</span></button>
+      <button class="prev-lnk" onclick="goPage('pg-s1')">返回修改基本信息</button>
+    </div>
   </div>
 </div>
 
-<!-- ══ STEP 3 ══ -->
+<!-- STEP 3 -->
 <div class="page" id="pg-s3">
-  <div class="pg-head">
-    <div class="ph-d1"></div><div class="ph-d2"></div>
-    <div class="prog"><div class="prog-s done"></div><div class="prog-s done"></div><div class="prog-s done"></div></div>
-    <button class="pg-back" onclick="goPage('pg-s2')">← 上一步</button>
-    <div class="pg-ey"><span></span>Step 03 of 03</div>
-    <div class="pg-h2">偏好<br><em>& 出行方式</em></div>
-    <div class="pg-rule"></div>
-    <div class="pg-num">03</div>
-    <!-- step 3 illustration: Google Maps style place recommendation cards -->
-    <div class="pg-illus">
-      <svg viewBox="0 0 300 110" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <!-- map bg -->
-        <rect width="300" height="110" fill="#F2F1ED"/>
-        <rect x="0" y="52" width="300" height="10" fill="white" opacity=".8"/>
-        <rect x="140" y="0" width="8" height="110" fill="white" opacity=".6"/>
-        <rect x="0" y="0" width="58" height="48" fill="#C8E6C9" opacity=".5" rx="3"/>
-        <rect x="150" y="62" width="150" height="48" fill="#C8E6C9" opacity=".5" rx="3"/>
-        <!-- route -->
-        <path d="M20 57 Q80 57 100 40 Q120 22 160 22 Q200 22 220 40 Q240 57 280 57" stroke="#4285F4" stroke-width="3" fill="none" stroke-linecap="round"/>
-        <!-- place card 1 -->
-        <rect x="62" y="18" width="72" height="36" rx="6" fill="white" style="filter:drop-shadow(0 2px 6px rgba(0,0,0,.14))"/>
-        <rect x="62" y="18" width="72" height="10" rx="6" fill="#FBF3E2"/>
-        <rect x="62" y="24" width="72" height="4" fill="#FBF3E2"/>
-        <circle cx="72" cy="33" r="7" fill="#FBBC04" opacity=".3"/>
-        <text x="72" y="36" font-size="10" text-anchor="middle" font-family="sans-serif">☕</text>
-        <rect x="84" y="29" width="36" height="4" rx="2" fill="#E0DDD8"/>
-        <rect x="84" y="36" width="24" height="3" rx="1.5" fill="#EDE9E3"/>
-        <text x="84" y="47" font-size="7" fill="#FBBC04" font-family="sans-serif" font-weight="700">★★★★★</text>
-        <!-- place card 2 -->
-        <rect x="166" y="62" width="72" height="36" rx="6" fill="white" style="filter:drop-shadow(0 2px 6px rgba(0,0,0,.14))"/>
-        <rect x="166" y="62" width="72" height="10" rx="6" fill="#E8F5E9"/>
-        <rect x="166" y="68" width="72" height="4" fill="#E8F5E9"/>
-        <circle cx="176" cy="77" r="7" fill="#34A853" opacity=".3"/>
-        <text x="176" y="80" font-size="10" text-anchor="middle" font-family="sans-serif">🌿</text>
-        <rect x="188" y="73" width="36" height="4" rx="2" fill="#E0DDD8"/>
-        <rect x="188" y="80" width="24" height="3" rx="1.5" fill="#EDE9E3"/>
-        <text x="188" y="91" font-size="7" fill="#FBBC04" font-family="sans-serif" font-weight="700">★★★★☆</text>
-        <!-- connecting line to cards -->
-        <line x1="98" y1="40" x2="98" y2="36" stroke="#EA4335" stroke-width="1.5" stroke-dasharray="2 2"/>
-        <line x1="200" y1="48" x2="200" y2="62" stroke="#EA4335" stroke-width="1.5" stroke-dasharray="2 2"/>
-        <!-- pins -->
-        <circle cx="98" cy="40" r="5" fill="#EA4335"/>
-        <circle cx="98" cy="40" r="2.5" fill="white"/>
-        <circle cx="200" cy="48" r="5" fill="#EA4335"/>
-        <circle cx="200" cy="48" r="2.5" fill="white"/>
-      </svg>
+  <div class="pg-shell">
+    <div class="ph">
+      <div class="ph-glow"></div>
+      <div class="prog"><div class="ps done"></div><div class="ps done"></div><div class="ps done"></div></div>
+      <button class="ph-back" onclick="goPage('pg-s2')">← 上一步</button>
+      <div class="ph-ey"><i></i>Step 03 of 03</div>
+      <div class="ph-h2">偏好<br><em>& 出行</em></div>
+      <div class="ph-rule"></div>
     </div>
-  </div>
-  <div class="pg-body">
-    <div class="chips-block">
-      <div class="chips-ttl-row">
-        <div class="chips-ttl">空档喜欢去哪</div>
-        <div class="chips-sub" id="prefCnt">已选 3</div>
+    <div class="pb">
+      <div class="chips-blk">
+        <div class="chips-ttl">空档喜欢去哪 <span class="chips-cnt" id="prefCnt">已选 3</span></div>
+        <div id="prefChips"></div>
       </div>
-      <div class="chips-wrap" id="prefChips"></div>
-    </div>
-    <div class="sdiv"><div class="sdiv-l"></div><div class="sdiv-t">出行方式</div><div class="sdiv-l"></div></div>
-    <div class="chips-block"><div class="chips-wrap" id="travelChips"></div></div>
-    <div class="sdiv"><div class="sdiv-l"></div><div class="sdiv-t">最短空档门槛</div><div class="sdiv-l"></div></div>
-    <div class="chips-block"><div class="chips-wrap" id="gapChips"></div></div>
-    <!-- TIPS -->
-    <div class="tips-row" onclick="togTips()">
-      <div class="tips-lbl"><div class="tips-ic">💡</div>使用小贴士</div>
-      <span class="tips-arr" id="tipsArr">↓</span>
-    </div>
-    <div class="tips-body" id="tipsBody">
-      <div style="padding-top:4px">
-        <div class="tip-item"><div class="tip-n">Tip 01</div><div class="tip-t">活动时间填准确一点</div><div class="tip-b">开始和结束时间越准确，分析出的空档就越精确。</div></div>
-        <div class="tip-item"><div class="tip-n">Tip 02</div><div class="tip-t">地点写地铁站或商圈名</div><div class="tip-b">比如<strong>「朝阳大悦城」</strong>比具体门牌号更容易找到附近推荐。</div></div>
-        <div class="tip-item"><div class="tip-n">Tip 03</div><div class="tip-t">空档门槛建议 45分钟–1小时</div><div class="tip-b">太短很难完成有意义的活动；太长会错过填充机会。</div></div>
-        <div class="tip-item"><div class="tip-n">Tip 04</div><div class="tip-t">收到行程后可以继续追问</div><div class="tip-b">比如「第二个推荐有没有替换选项？」「如果下雨改室内的呢？」可以继续调整。</div></div>
+      <div class="sdiv"><div class="sdiv-l"></div><div class="sdiv-t">出行方式</div><div class="sdiv-l"></div></div>
+      <div class="chips-blk"><div id="travelChips"></div></div>
+      <div class="sdiv"><div class="sdiv-l"></div><div class="sdiv-t">最短空档门槛</div><div class="sdiv-l"></div></div>
+      <div class="chips-blk"><div id="gapChips"></div></div>
+      <div class="tips-row" onclick="togTips()">
+        <div class="tips-lbl"><div class="tips-ic">💡</div>使用小贴士</div>
+        <span class="tips-arr" id="tipsArr">↓</span>
+      </div>
+      <div class="tips-body" id="tipsBody">
+        <div style="padding-top:4px">
+          <div class="tip-item"><div class="tip-n">Tip 01</div><div class="tip-t">活动时间填准确</div><div class="tip-b">时间越准确，空档分析越精确，不确定就填估计值。</div></div>
+          <div class="tip-item"><div class="tip-n">Tip 02</div><div class="tip-t">地点写地铁站或商圈</div><div class="tip-b">比如<strong>「朝阳大悦城」</strong>比具体门牌号更容易找到推荐。</div></div>
+          <div class="tip-item"><div class="tip-n">Tip 03</div><div class="tip-t">空档门槛 45分钟–1小时最佳</div><div class="tip-b">太短很难完成有意义的活动，太长会错过填充机会。</div></div>
+        </div>
       </div>
     </div>
-  </div>
-  <div class="pg-footer" style="padding-top:20px">
-    <button class="next-btn" id="submitBtn" onclick="submit()">开始规划行程 <span class="btn-arr">→</span></button>
-    <button class="prev-link" onclick="goPage('pg-s2')">返回修改活动</button>
+    <div class="pf" style="padding-top:20px">
+      <button class="btn-next" id="submitBtn" onclick="doSubmit()">开始规划行程 <span>→</span></button>
+      <button class="prev-lnk" onclick="goPage('pg-s2')">返回修改活动</button>
+    </div>
   </div>
 </div>
 
-<!-- ══ RESULT ══ -->
+<!-- RESULT -->
 <div class="page" id="pg-result">
   <div class="re-head">
-    <div class="rh-d1"></div><div class="rh-d2"></div>
+    <div class="re-glow"></div>
     <div class="re-tag">行程规划完成</div>
     <div class="re-h2" id="reH2">你的<br><em>今日行程</em></div>
     <div class="re-date" id="reDate"></div>
-    <div class="re-metrics" id="reMetrics"></div>
+    <div class="re-mets" id="reMets"></div>
   </div>
-  <div class="tl-body" id="tlBody"></div>
+  <div class="tl" id="tlBody"></div>
   <div class="re-acts">
     <button class="re-btn primary" onclick="goPage('pg-s1')">重新规划 <span>→</span></button>
     <button class="re-btn sec" id="copyBtn" onclick="copyRes()">复制行程文字</button>
   </div>
 </div>
 
-<!-- ══ BOT NAV ══ -->
-<div class="bot-nav">
-  <div class="bot-item active" id="nav-plan" onclick="navTo('plan')"><div class="bot-ic">🗓</div><div class="bot-lbl">规划</div></div>
-  <div class="bot-item" id="nav-result" onclick="navTo('result')"><div class="bot-ic">✨</div><div class="bot-lbl">行程</div></div>
 </div>
 
 <script>
-// ── CITY → DISTRICTS MAP ──
-const CITY_AREAS={
-  '北京':['朝阳区·三里屯','朝阳区·国贸','朝阳区·望京','海淀区·中关村','海淀区·五道口','西城区·西单','东城区·王府井','丰台区·丰台科技园','通州区·运河商务区','昌平区·天通苑','石景山区·古城','顺义区·顺义城区'],
-  '上海':['黄浦区·人民广场','静安区·南京西路','徐汇区·徐家汇','长宁区·中山公园','浦东新区·陆家嘴','浦东新区·张江','普陀区·长寿路','虹口区·四川北路','杨浦区·大学路','闵行区·莘庄','宝山区·宝山城区','松江区·松江新城'],
-  '广州':['天河区·天河城','天河区·珠江新城','越秀区·北京路','荔湾区·上下九','海珠区·琶洲','番禺区·番禺广场','白云区·白云新城','黄埔区·科学城','南沙区·南沙中心'],
-  '深圳':['福田区·华强北','福田区·深圳湾','南山区·科技园','南山区·海岸城','罗湖区·东门','宝安区·宝安中心','龙华区·民治','龙岗区·大运','坪山区·坪山中心'],
-  '成都':['锦江区·春熙路','武侯区·高新区','青羊区·宽窄巷子','金牛区·火车北站','成华区·建设路','高新区·天府二街','天府新区·兴隆湖'],
-  '杭州':['西湖区·西湖','上城区·湖滨','拱墅区·运河','余杭区·未来科技城','滨江区·滨江高新','萧山区·萧山城区','临安区·临安城区'],
-  '武汉':['武昌区·楚河汉街','汉口区·江汉路','洪山区·光谷','江汉区·武广','蔡甸区·蔡甸城区','东西湖区·金银湖'],
-  '西安':['雁塔区·大雁塔','碑林区·钟楼','莲湖区·劳动路','未央区·凤城','高新区·软件新城','曲江新区·大唐不夜城'],
-  '南京':['鼓楼区·新街口','玄武区·玄武湖','秦淮区·夫子庙','建邺区·河西','江宁区·东山','栖霞区·仙林'],
-  '重庆':['渝中区·解放碑','渝中区·朝天门','南岸区·南滨路','江北区·观音桥','沙坪坝区·三峡广场','九龙坡区·杨家坪'],
-  '苏州':['姑苏区·观前街','工业园区·金鸡湖','吴中区·木渎','相城区·相城中心','吴江区·松陵'],
-  '天津':['和平区·滨江道','南开区·鼓楼','河西区·友谊路','河东区·万达广场','滨海新区·于家堡'],
-  '长沙':['芙蓉区·五一广场','天心区·坡子街','岳麓区·梅溪湖','开福区·湘江北路','望城区·高塘岭'],
-  '厦门':['思明区·中山路','思明区·鼓浪屿','湖里区·火炬高新区','集美区·集美学村','海沧区·海沧中心'],
-  '青岛':['市南区·台东','市北区·李村','崂山区·石老人','黄岛区·开发区','城阳区·城阳中心'],
-  '宁波':['海曙区·天一广场','江北区·万达','鄞州区·南部商务区','镇海区·镇海中心','北仑区·北仑中心'],
-  '郑州':['金水区·花园路','二七区·二七广场','中原区·碧沙岗','高新区·西四环','郑东新区·CBD'],
-  '合肥':['蜀山区·三里庵','庐阳区·城隍庙','包河区·滨湖新区','高新区·长江西路','瑶海区·站前广场'],
-  '福州':['鼓楼区·东街口','台江区·苍霞','仓山区·城门','晋安区·茶园','马尾区·马尾中心'],
-  '三亚':['三亚湾·三亚湾海滩','亚龙湾·亚龙湾度假区','海棠湾·国际免税城','鹿城中心·解放路'],
-  '丽江':['古城区·丽江古城','玉龙县·束河古镇','玉龙县·白沙古镇'],
-  '大理':['大理古城·古城中心','下关·中心区','双廊·洱海边','喜洲·喜洲古镇'],
-  '桂林':['象山区·正阳步行街','七星区·七星公园','阳朔县·西街','灵川县·大圩古镇'],
-  '张家界':['永定区·武陵源','慈利县·江垭温泉','桑植县·张家界市区'],
-  '黄山':['屯溪区·老街','徽州区·呈坎','黟县·宏村','歙县·棠樾'],
-};
+const KEY = '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';
 
-const PREFS=[
-  {id:'cafe',icon:'☕',l:'咖啡馆'},{id:'dessert',icon:'🍰',l:'甜品'},
-  {id:'park',icon:'🌿',l:'公园散步'},{id:'snack',icon:'🍢',l:'小吃探店'},
-  {id:'shopping',icon:'🛍',l:'购物逛街'},{id:'museum',icon:'🏛',l:'博物馆展览'},
-  {id:'photo',icon:'📸',l:'打卡拍照'},{id:'bookstore',icon:'📚',l:'书店文创'},
-  {id:'bar',icon:'🍹',l:'酒吧'},{id:'arcade',icon:'🎮',l:'游戏娱乐'},
-];
-const TRAVEL=[
-  {id:'transit',icon:'🚇',l:'地铁/公交'},{id:'walk',icon:'🚶',l:'步行'},
-  {id:'taxi',icon:'🚕',l:'打车'},{id:'drive',icon:'🚗',l:'开车'},
-];
+const PREFS=[{id:'cafe',i:'☕',l:'咖啡馆'},{id:'dessert',i:'🍰',l:'甜品'},{id:'park',i:'🌿',l:'公园散步'},{id:'snack',i:'🍢',l:'小吃探店'},{id:'shopping',i:'🛍',l:'购物逛街'},{id:'museum',i:'🏛',l:'博物馆展览'},{id:'photo',i:'📸',l:'打卡拍照'},{id:'bookstore',i:'📚',l:'书店文创'},{id:'bar',i:'🍹',l:'酒吧'},{id:'arcade',i:'🎮',l:'游戏娱乐'}];
+const TRAVEL=[{id:'transit',i:'🚇',l:'地铁/公交'},{id:'walk',i:'🚶',l:'步行'},{id:'taxi',i:'🚕',l:'打车'},{id:'drive',i:'🚗',l:'开车'}];
 const GAPS=['30分钟','45分钟','1小时','1.5小时','2小时'];
-const PEOPLE_OPTS=[{v:'1',l:'1人',i:'🧍'},{v:'2',l:'2人',i:'👫'},{v:'3-4',l:'3-4人',i:'👨‍👩‍👧'},{v:'5+',l:'5人+',i:'🎉'}];
-const BUDGET_OPTS=[{v:'50',l:'人均50以内'},{v:'100',l:'人均100以内'},{v:'200',l:'人均200以内'},{v:'0',l:'不限预算'}];
+const PEOPLE=[{v:'1',l:'1人',i:'🧍'},{v:'2',l:'2人',i:'👫'},{v:'3-4',l:'3-4人',i:'👪'},{v:'5+',l:'5人+',i:'🎉'}];
+const BUDGET=[{v:'50',l:'50以内'},{v:'100',l:'100以内'},{v:'200',l:'200以内'},{v:'0',l:'不限'}];
+const EV_TYPES=[
+  {g:'用餐',items:['早饭','早午饭','午饭','下午茶','晚饭','宵夜','聚餐']},
+  {g:'娱乐',items:['剧本杀','密室逃脱','看电影','KTV','桌游','演唱会/演出','游乐园']},
+  {g:'文化',items:['展览/博物馆','逛街/购物','书店','看展']},
+  {g:'运动',items:['健身/运动','爬山/徒步','打球','游泳']},
+  {g:'其他',items:['其他（自定义）']}
+];
 
-let sPrefs=new Set(['cafe','park','snack']);
-let sTravel=new Set(['transit']);
-let sGap='45分钟';
-let sPeople='2';
-let sBudget='100';
-let evs=[];let eid=0;
-let curPage='pg-cover';
-let tipsOpen=false;
+let sPrefs=new Set(['cafe','park','snack']), sTravel=new Set(['transit']), sGap='45分钟', sPeople='2', sBudget='100';
+let evs=[], eid=0, curPage='pg-cover', tipsOpen=false;
 
-// ── BOOT ──
-const now=new Date();
-document.getElementById('cvDate').textContent=now.toLocaleDateString('zh-CN',{month:'long',day:'numeric',weekday:'short'});
-document.getElementById('tripDate').valueAsDate=now;
-initChips();
-initPickers();
-addEv();
+// INIT
+document.getElementById('cvDate').textContent = new Date().toLocaleDateString('zh-CN',{month:'long',day:'numeric',weekday:'short'});
+document.getElementById('tripDate').valueAsDate = new Date();
 
-// ── CITY CHANGE ── (更新活动地点下拉)
-document.getElementById('citySelect').addEventListener('change',function(){
-  renderEvs();
-});
+document.getElementById('peoplePick').innerHTML = PEOPLE.map(o=>`<div class="pp${o.v===sPeople?' on':''}" onclick="pickP('${o.v}',this)">${o.i} ${o.l}</div>`).join('');
+document.getElementById('budgetPick').innerHTML = BUDGET.map(o=>`<div class="pp${o.v===sBudget?' on':''}" onclick="pickB('${o.v}',this)">${o.l}</div>`).join('');
+document.getElementById('prefChips').innerHTML = PREFS.map(p=>`<div class="chip${sPrefs.has(p.id)?' on':''}" onclick="togP('${p.id}',this)">${p.i} ${p.l}</div>`).join('');
+document.getElementById('travelChips').innerHTML = TRAVEL.map(t=>`<div class="chip tr${sTravel.has(t.id)?' on':''}" onclick="togT('${t.id}',this)">${t.i} ${t.l}</div>`).join('');
+document.getElementById('gapChips').innerHTML = GAPS.map(g=>`<div class="chip gp${g===sGap?' on':''}" onclick="togG('${g}',this)">${g}</div>`).join('');
 
-// ── API KEY（内置）── 替换下方 YOUR_OPENROUTER_KEY_HERE 为你的真实 Key
-const OPENROUTER_KEY='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';
-function getKey(){return OPENROUTER_KEY;}
-
-// ── PICKERS ──
-function initPickers(){
-  document.getElementById('peoplePick').innerHTML=PEOPLE_OPTS.map(o=>
-    `<div class="pp${o.v===sPeople?' on':''}" onclick="pickPeople('${o.v}',this)"><span class="pi">${o.i}</span>${o.l}</div>`).join('');
-  document.getElementById('budgetPick').innerHTML=BUDGET_OPTS.map(o=>
-    `<div class="pp${o.v===sBudget?' on':''}" onclick="pickBudget('${o.v}',this)">${o.l}</div>`).join('');
-}
-function pickPeople(v,el){sPeople=v;document.querySelectorAll('#peoplePick .pp').forEach(c=>c.classList.remove('on'));el.classList.add('on');}
-function pickBudget(v,el){sBudget=v;document.querySelectorAll('#budgetPick .pp').forEach(c=>c.classList.remove('on'));el.classList.add('on');}
-
-// ── CHIPS ──
-function initChips(){
-  document.getElementById('prefChips').innerHTML=PREFS.map(p=>
-    `<div class="chip${sPrefs.has(p.id)?' on':''}" onclick="togP('${p.id}',this)"><span>${p.icon}</span>${p.l}</div>`).join('');
-  document.getElementById('travelChips').innerHTML=TRAVEL.map(t=>
-    `<div class="chip tr${sTravel.has(t.id)?' on':''}" onclick="togT('${t.id}',this)"><span>${t.icon}</span>${t.l}</div>`).join('');
-  document.getElementById('gapChips').innerHTML=GAPS.map(g=>
-    `<div class="chip gp${g===sGap?' on':''}" onclick="togG('${g}',this)">${g}</div>`).join('');
-}
+function pickP(v,el){sPeople=v;document.querySelectorAll('#peoplePick .pp').forEach(c=>c.classList.remove('on'));el.classList.add('on');}
+function pickB(v,el){sBudget=v;document.querySelectorAll('#budgetPick .pp').forEach(c=>c.classList.remove('on'));el.classList.add('on');}
 function togP(id,el){sPrefs.has(id)?sPrefs.delete(id):sPrefs.add(id);el.classList.toggle('on');document.getElementById('prefCnt').textContent='已选 '+sPrefs.size;}
 function togT(id,el){sTravel.has(id)?sTravel.delete(id):sTravel.add(id);el.classList.toggle('on');}
 function togG(v,el){sGap=v;document.querySelectorAll('#gapChips .chip').forEach(c=>c.classList.remove('on'));el.classList.add('on');}
 
-// ── PAGE NAV ──
+function togAcc(id){
+  const body=document.getElementById('body-'+id);
+  const arr=document.getElementById('arr-'+id);
+  const open=body.classList.toggle('open');
+  arr.classList.toggle('open',open);
+}
+
 function goPage(id){
   document.getElementById(curPage).classList.remove('active');
   document.getElementById(id).classList.add('active');
-  curPage=id;window.scrollTo(0,0);
-  const map={'pg-cover':'plan','pg-s1':'plan','pg-s2':'plan','pg-s3':'plan','pg-result':'result'};
-  const tab=map[id]||'plan';
-  ['plan','result'].forEach(t=>{document.getElementById('nav-'+t)?.classList.toggle('active',t===tab);});
-}
-function navTo(t){
-  if(t==='plan')goPage(['pg-s1','pg-s2','pg-s3'].includes(curPage)?curPage:'pg-s1');
-  if(t==='result')goPage('pg-result');
+  curPage=id; window.scrollTo(0,0);
 }
 
-// ── EVENTS ──
-function addEv(){evs.push({id:++eid,name:'',loc:'',s:'',e:''});renderEvs();}
-function delEv(id){evs=evs.filter(x=>x.id!==id);renderEvs();}
-function updEv(id,k,v){const e=evs.find(x=>x.id===id);if(e)e[k]=v;}
+// EVENTS — append only, read DOM at validation time
+function buildOpts(){
+  return EV_TYPES.map(g=>`<optgroup label="${g.g}">${g.items.map(t=>`<option value="${t}">${t}</option>`).join('')}</optgroup>`).join('');
+}
 
-const EV_TYPES=['剧本杀','密室逃脱','电影','展览/博物馆','演唱会/演出','运动/健身','美食/餐厅','下午茶','KTV','桌游','购物','其他'];
-
-function renderEvs(){
-  const city=document.getElementById('citySelect').value||'所在城市';
-  document.getElementById('evWrap').innerHTML=evs.map((ev,i)=>`
-    <div class="ev-item">
-      <div class="ev-head">
-        <span class="ev-num">活动 ${String(i+1).padStart(2,'0')}</span>
-        <button class="ev-del" onclick="delEv(${ev.id})">×</button>
-      </div>
-      <div class="ev-body">
-        <div class="field-row">
-          <div class="field">
-            <label class="fl">活动类型</label>
-            <div class="sel-wrap">
-              <select oninput="updEv(${ev.id},'name',this.value)">
-                <option value="">请选择</option>
-                ${EV_TYPES.map(t=>`<option value="${t}"${ev.name===t?' selected':''}>${t}</option>`).join('')}
-              </select>
-              <span class="sel-arrow">▼</span>
-            </div>
-          </div>
-          <div class="field">
-            <label class="fl">地点名称</label>
-            <div class="sel-wrap">
-              <select oninput="updEv(${ev.id},'loc',this.value)">
-                <option value="">选择区域</option>
-                ${(CITY_AREAS[city]||[]).map(a=>`<option value="${a}"${ev.loc===a?' selected':''}>${a}</option>`).join('')}
-                <option value="其他区域">其他区域</option>
-              </select>
-              <span class="sel-arrow">▼</span>
-            </div>
-          </div>
-        </div>
-        <div class="field-row">
-          <div class="field"><label class="fl">开始时间</label>
-            <input type="time" value="${ev.s}" oninput="updEv(${ev.id},'s',this.value)"/></div>
-          <div class="field"><label class="fl">结束时间</label>
-            <input type="time" value="${ev.e}" oninput="updEv(${ev.id},'e',this.value)"/></div>
+function addEv(){
+  const id=++eid; evs.push({id});
+  const wrap=document.getElementById('evWrap');
+  const num=evs.length;
+  const div=document.createElement('div');
+  div.className='ev-item'; div.id='ev-'+id;
+  div.innerHTML=`
+    <div class="ev-head">
+      <span class="ev-num">活动 ${String(num).padStart(2,'0')}</span>
+      <button class="ev-del" onclick="delEv(${id})">×</button>
+    </div>
+    <div class="ev-body">
+      <div class="field">
+        <label class="fl">活动类型</label>
+        <div class="sw">
+          <select id="n${id}" onchange="showCustom(${id})">
+            <option value="">请选择活动类型</option>
+            ${buildOpts()}
+          </select>
+          <span class="sw-a">▼</span>
         </div>
       </div>
-    </div>`).join('');
+      <div id="cw${id}" style="display:none" class="field">
+        <label class="fl">自定义名称</label>
+        <div class="ic"><div class="ic-ico">✏️</div><input type="text" id="c${id}" placeholder="请输入活动名称"/></div>
+      </div>
+      <div class="field">
+        <label class="fl">地点名称</label>
+        <div class="ic"><div class="ic-ico">📍</div><input type="text" id="l${id}" placeholder="如：朝阳大悦城、三里屯"/></div>
+      </div>
+      <div class="time-row">
+        <div class="field">
+          <label class="fl">开始时间</label>
+          <div class="ic"><div class="ic-ico">🕐</div><input type="time" id="s${id}"/></div>
+          <div class="time-guide">点击选择开始时间</div>
+        </div>
+        <div class="field">
+          <label class="fl">结束时间</label>
+          <div class="ic"><div class="ic-ico">🕔</div><input type="time" id="e${id}"/></div>
+          <div class="time-guide">点击选择结束时间</div>
+        </div>
+      </div>
+    </div>`;
+  wrap.appendChild(div);
+  setTimeout(()=>div.scrollIntoView({behavior:'smooth',block:'center'}),80);
 }
 
-// ── TIPS ──
+function showCustom(id){
+  const s=document.getElementById('n'+id), w=document.getElementById('cw'+id);
+  if(w) w.style.display=(s&&s.value==='其他（自定义）')?'block':'none';
+}
+
+function delEv(id){
+  evs=evs.filter(x=>x.id!==id);
+  document.getElementById('ev-'+id)?.remove();
+  evs.forEach((e,i)=>{
+    const h=document.querySelector('#ev-'+e.id+' .ev-num');
+    if(h) h.textContent='活动 '+String(i+1).padStart(2,'0');
+  });
+}
+
+function getEv(id){
+  const sel=document.getElementById('n'+id);
+  const isCustom=sel&&sel.value==='其他（自定义）';
+  return {
+    name:  isCustom?(document.getElementById('c'+id)?.value.trim()||''):(sel?sel.value:''),
+    loc:   document.getElementById('l'+id)?.value.trim()||'',
+    start: document.getElementById('s'+id)?.value||'',
+    end:   document.getElementById('e'+id)?.value||''
+  };
+}
+
 function togTips(){
   tipsOpen=!tipsOpen;
   document.getElementById('tipsBody').classList.toggle('open',tipsOpen);
   document.getElementById('tipsArr').classList.toggle('open',tipsOpen);
 }
 
-// ── VALIDATORS ──
 function showErr(id,msg){
-  const el=document.getElementById(id);el.textContent=msg;el.classList.add('show');
-  setTimeout(()=>el.classList.remove('show'),3500);
+  const el=document.getElementById(id);
+  if(!el) return;
+  el.textContent=msg; el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),4000);
 }
+
 function s1Next(){
   if(!document.getElementById('citySelect').value){showErr('err1','请选择城市');return;}
-  if(!document.getElementById('homeDetail').value.trim()){showErr('err1','请填写出发地址');return;}
+  if(!document.getElementById('homeAddr').value.trim()){showErr('err1','请填写出发地址');return;}
   goPage('pg-s2');
 }
+
 function s2Next(){
   if(!evs.length){showErr('err2','请至少添加一个已确定的活动');return;}
-  if(evs.find(e=>!e.name||!e.loc||!e.s||!e.e)){showErr('err2','请将所有活动信息填写完整');return;}
+  for(const ev of evs){
+    const d=getEv(ev.id);
+    if(!d.name){showErr('err2','请为所有活动选择类型');return;}
+    if(!d.loc){showErr('err2','请填写所有活动的地点');return;}
+    if(!d.start){showErr('err2','请填写所有活动的开始时间');return;}
+    if(!d.end){showErr('err2','请填写所有活动的结束时间');return;}
+  }
   goPage('pg-s3');
 }
 
-// ── SUBMIT ──
-async function submit(){
-  const key=getKey();
+async function doSubmit(){
+  const btn=document.getElementById('submitBtn');
   const city=document.getElementById('citySelect').value;
-  const home=document.getElementById('homeDetail').value.trim();
+  const home=document.getElementById('homeAddr').value.trim();
   const date=document.getElementById('tripDate').value;
-  const peopleLabel=PEOPLE_OPTS.find(o=>o.v===sPeople)?.l||sPeople+'人';
-  const budgetLabel=sBudget==='0'?'不限预算':`人均${sBudget}元以内`;
-  const prefStr=PREFS.filter(p=>sPrefs.has(p.id)).map(p=>p.l).join('、')||'不限';
-  const travStr=TRAVEL.filter(t=>sTravel.has(t.id)).map(t=>t.l).join('、')||'不限';
-  const evStr=evs.map((e,i)=>`活动${i+1}：${e.name}，区域：${e.loc}，时间：${e.s}～${e.e}`).join('\n');
-  const dateStr=date?new Date(date+'T12:00').toLocaleDateString('zh-CN',{year:'numeric',month:'long',day:'numeric',weekday:'long'}):'近期';
+  const pLabel=PEOPLE.find(o=>o.v===sPeople)?.l||sPeople+'人';
+  const bLabel=sBudget==='0'?'不限预算':`人均${sBudget}元以内`;
+  const pStr=PREFS.filter(p=>sPrefs.has(p.id)).map(p=>p.l).join('、')||'不限';
+  const tStr=TRAVEL.filter(t=>sTravel.has(t.id)).map(t=>t.l).join('、')||'不限';
+  const dStr=date?new Date(date+'T12:00').toLocaleDateString('zh-CN',{year:'numeric',month:'long',day:'numeric',weekday:'long'}):'近期';
+  const evStr=evs.map((ev,i)=>{const d=getEv(ev.id);return `活动${i+1}：${d.name}，地点：${d.loc}，时间：${d.start}～${d.end}`;}).join('\n');
 
-  const prompt=`你是一个中国城市行程规划助手。请帮用户规划今天的行程，智能填充空档时间。
+  const prompt=`你是中国城市行程规划助手。城市：${city}，出发/终点：${home}，日期：${dStr}，出行：${tStr}，人数：${pLabel}，预算：${bLabel}。已确定活动：\n${evStr}\n空档偏好：${pStr}，最短空档：${sGap}。\n\n分析各活动间空档，根据顺路原则推荐2-4个真实存在的填充地点（${city}具体地址）。只输出JSON：\n{"title":"5字内标题","summary":{"totalTime":"X小时","totalDist":"约X公里","perPerson":"约X元"},"date":"${dStr}","timeline":[{"type":"home","name":"出发","address":"${home}","time":"HH:MM","tags":[],"rating":null,"duration":"","reason":""},{"type":"transit","mode":"地铁/公交","modeIcon":"🚇","duration":"约X分钟"},{"type":"fixed","name":"活动名","address":"具体地址","time":"HH:MM–HH:MM","tags":["已确定"],"rating":null,"duration":"X小时","reason":""},{"type":"transit","mode":"步行","modeIcon":"🚶","duration":"约X分钟"},{"type":"gap","name":"推荐地点","address":"具体地址","time":"HH:MM–HH:MM","tags":["推荐"],"rating":4.7,"duration":"约X分钟","reason":"推荐理由"},{"type":"home","name":"回家","address":"${home}","time":"HH:MM","tags":[],"rating":null,"duration":"","reason":""}]}`;
 
-用户信息：
-- 城市：${city}
-- 出发/终点：${home}
-- 出行日期：${dateStr}
-- 出行方式：${travStr}
-- 出行人数：${peopleLabel}
-- 预算：${budgetLabel}
-- 已确定活动：
-${evStr}
-- 空档填充偏好：${prefStr}
-- 最短推荐空档：${sGap}
-
-任务：
-1. 分析各活动之间（以及出发前、回家前）的空档时间
-2. 根据路线顺路原则，在空档中推荐2-4个具体填充地点（必须是${city}真实存在的地点，提供具体地址）
-3. 返回完整行程时间轴
-
-严格按以下JSON格式输出，只输出JSON，不要任何其他文字：
-{
-  "title": "行程标题（5字内）",
-  "summary": {"totalTime":"X小时","totalDist":"约X公里","perPerson":"约X元"},
-  "date": "${dateStr}",
-  "timeline": [
-    {"type":"home","name":"出发","address":"${home}","time":"HH:MM","tags":[],"rating":null,"duration":"","reason":""},
-    {"type":"transit","mode":"出行方式","modeIcon":"🚇","duration":"约X分钟"},
-    {"type":"fixed","name":"活动名","address":"具体地址","time":"HH:MM–HH:MM","tags":["已确定"],"rating":null,"duration":"X小时","reason":""},
-    {"type":"transit","mode":"出行方式","modeIcon":"🚶","duration":"约X分钟"},
-    {"type":"gap","name":"推荐地点","address":"具体地址","time":"HH:MM–HH:MM","tags":["推荐","咖啡馆"],"rating":4.7,"duration":"约X分钟","reason":"一句话推荐理由"},
-    {"type":"home","name":"回家","address":"${home}","time":"HH:MM","tags":[],"rating":null,"duration":"","reason":""}
-  ]
-}`;
-
-  document.getElementById('submitBtn').disabled=true;
-  document.getElementById('ldOverlay').classList.add('show');
+  btn.disabled=true;
+  document.getElementById('ld').classList.add('show');
 
   try{
     const resp=await fetch('https://openrouter.ai/api/v1/chat/completions',{
       method:'POST',
-      headers:{
-        'Content-Type':'application/json',
-        'Authorization':`Bearer ${key}`,
-        'HTTP-Referer':'https://jinri-manpai.github.io',
-        'X-Title':'今日满排'
-      },
-      body:JSON.stringify({
-        model:'deepseek/deepseek-chat',
-        max_tokens:2000,
-        response_format:{type:'json_object'},
-        messages:[
-          {role:'system',content:'你是中国城市行程规划助手，只输出JSON，不输出任何其他内容。'},
-          {role:'user',content:prompt}
-        ]
-      })
+      headers:{'Content-Type':'application/json','Authorization':`Bearer ${KEY}`,'HTTP-Referer':'https://jinri-manpai.github.io','X-Title':'今日满排'},
+      body:JSON.stringify({model:'deepseek/deepseek-chat',max_tokens:2000,response_format:{type:'json_object'},messages:[{role:'system',content:'只输出JSON，不输出任何其他内容。'},{role:'user',content:prompt}]})
     });
     if(!resp.ok){
-      const d=await resp.json().catch(()=>({}));
-      const m=d.error?.message||`请求失败 (${resp.status})`;
-      if(resp.status===401)throw new Error('API Key 无效，请检查后重试');
-      if(resp.status===402)throw new Error('余额不足，请前往 openrouter.ai 充值');
-      if(resp.status===429)throw new Error('请求太频繁，请稍等片刻后再试');
-      throw new Error(m);
+      const ed=await resp.json().catch(()=>({}));
+      if(resp.status===401)throw new Error('API Key 无效，请检查配置');
+      if(resp.status===402)throw new Error('账户余额不足，请充值后重试');
+      if(resp.status===429)throw new Error('请求太频繁，请稍等片刻后重试');
+      throw new Error(ed.error?.message||`请求失败 (${resp.status})`);
     }
     const data=await resp.json();
     const raw=data.choices?.[0]?.message?.content||'';
-    const clean=raw.replace(/```json\s*/g,'').replace(/```\s*/g,'').trim();
-    renderResult(JSON.parse(clean));
-  }catch(e){
-    document.getElementById('ldOverlay').classList.remove('show');
-    document.getElementById('submitBtn').disabled=false;
-    showErr('err2',e.message||'规划失败，请检查网络和 API Key 后重试');
-    goPage('pg-s3');
+    renderResult(JSON.parse(raw.replace(/```json\s*/g,'').replace(/```\s*/g,'').trim()));
+  }catch(err){
+    document.getElementById('ld').classList.remove('show');
+    btn.disabled=false;
+    showErr('err2',err.message||'规划失败，请检查网络后重试');
   }
 }
 
-// ── RENDER RESULT ──
 function renderResult(plan){
-  document.getElementById('ldOverlay').classList.remove('show');
+  document.getElementById('ld').classList.remove('show');
   document.getElementById('submitBtn').disabled=false;
   const s=plan.summary||{};
   document.getElementById('reH2').innerHTML=`你的<br><em>${plan.title||'今日行程'}</em>`;
   document.getElementById('reDate').textContent=plan.date||'';
-  document.getElementById('reMetrics').innerHTML=`
-    <div class="r-met"><span class="r-mv">${s.totalTime||'--'}</span><span class="r-ml">总时长</span></div>
-    <div class="r-met"><span class="r-mv">${s.totalDist||'--'}</span><span class="r-ml">总距离</span></div>
-    <div class="r-met"><span class="r-mv">${s.perPerson||'--'}</span><span class="r-ml">人均花费</span></div>`;
+  document.getElementById('reMets').innerHTML=`
+    <div class="r-m"><span class="r-mv">${s.totalTime||'--'}</span><span class="r-ml">总时长</span></div>
+    <div class="r-m"><span class="r-mv">${s.totalDist||'--'}</span><span class="r-ml">总距离</span></div>
+    <div class="r-m"><span class="r-mv">${s.perPerson||'--'}</span><span class="r-ml">人均花费</span></div>`;
   let html='';
   (plan.timeline||[]).forEach((item,i,arr)=>{
-    if(item.type==='transit'){
-      html+=`<div class="tl-tr"><div class="tl-tr-ic">${item.modeIcon||'🚇'}</div>${item.mode} · ${item.duration}</div>`;
-      return;
-    }
+    if(item.type==='transit'){html+=`<div class="tl-tr"><div class="tl-tr-ic">${item.modeIcon||'🚇'}</div>${item.mode} · ${item.duration}</div>`;return;}
     const isLast=i===arr.length-1;
     const dc=item.type==='gap'?'d-gap':item.type==='home'?'d-home':'d-fixed';
     const cc=item.type==='gap'?'cg':item.type==='fixed'?'cf':'';
@@ -956,28 +731,16 @@ function renderResult(plan){
     const du=`https://www.dianping.com/search/keyword/2/10_${encodeURIComponent(item.name||'')}`;
     const tags=(item.tags||[]).map(t=>`<span class="tl-tag ${t==='已确定'?'tt-f':t==='推荐'?'tt-g':'tt-c'}">${t}</span>`).join('');
     const acts=item.type!=='home'?`<div class="tl-acts"><a class="tl-act a-map" href="${mu}" target="_blank">🗺 导航</a><a class="tl-act a-dp" href="${du}" target="_blank">📍 点评</a></div>`:'';
-    html+=`<div class="tl-item${isLast?' last':''}">
-      <div class="tl-stem"></div>
-      <div class="tl-dot ${dc}"></div>
-      <div class="tl-card ${cc}">
-        <div class="tl-top"><div class="tl-name">${item.name}</div><div class="tl-time">${item.time||''}</div></div>
-        ${tags?`<div class="tl-tags">${tags}</div>`:''}
-        ${item.address?`<div class="tl-addr">📍 ${item.address}</div>`:''}
-        ${item.rating?`<div class="tl-rating"><span class="tl-stars">★</span><span class="tl-rv">${item.rating}</span>${item.duration?`<span class="tl-dur"> · ${item.duration}</span>`:''}</div>`:''}
-        ${item.reason?`<div class="tl-reason">${item.reason}</div>`:''}
-        ${acts}
-      </div>
-    </div>`;
+    html+=`<div class="tl-item${isLast?' last':''}"><div class="tl-stem"></div><div class="tl-dot ${dc}"></div><div class="tl-card ${cc}"><div class="tl-top"><div class="tl-name">${item.name}</div><div class="tl-time">${item.time||''}</div></div>${tags?`<div class="tl-tags">${tags}</div>`:''}${item.address?`<div class="tl-addr">📍 ${item.address}</div>`:''}${item.rating?`<div class="tl-rating"><span class="tl-stars">★</span><span class="tl-rv">${item.rating}</span>${item.duration?`<span class="tl-dur"> · ${item.duration}</span>`:''}</div>`:''}${item.reason?`<div class="tl-reason">${item.reason}</div>`:''}${acts}</div></div>`;
   });
   document.getElementById('tlBody').innerHTML=html;
   goPage('pg-result');
 }
 
-// ── COPY ──
 function copyRes(){
-  navigator.clipboard.writeText(document.getElementById('tlBody').innerText).then(()=>{
+  navigator.clipboard?.writeText(document.getElementById('tlBody').innerText).then(()=>{
     const b=document.getElementById('copyBtn');
-    b.textContent='已复制 ✓';b.classList.add('copied');
+    b.textContent='已复制 ✓'; b.classList.add('copied');
     setTimeout(()=>{b.textContent='复制行程文字';b.classList.remove('copied');},2500);
   });
 }
